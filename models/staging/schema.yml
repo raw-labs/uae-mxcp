@@ -2,5 +2,5 @@ version: 2
 models:
   - name: stg_licenses_raw
     columns:
-      - name: bl_num
+      - name: bl
         tests: [not_null]

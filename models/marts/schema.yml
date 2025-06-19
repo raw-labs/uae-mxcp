@@ -9,7 +9,7 @@ models:
           - unique
           - not_null
 
-      - name: bl_num
+      - name: bl
         description: "The official business license number (BL #)."
         tests:
           - not_null
@@ -19,7 +19,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain']
+              values: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain', 'Umm Al-Quwain']
 
       - name: issuance_authority_en
         description: "The English name of the license issuing authority."
@@ -31,7 +31,10 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Active', 'Expired', 'Cancelled', 'Current', 'On Hold', 'In  Active']
+              values: [
+                  'Active', 'Expired', 'Cancelled', 'Current', 'On Hold', 'In  Active', 'Inactive',
+                  'Blocked', 'Suspended', 'Under Liquidation', 'Under Commercial Liquidation'
+                ]
 
       - name: bl_legal_type_en
         description: "The legal type of the business entity."
