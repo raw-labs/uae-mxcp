@@ -1,0 +1,7 @@
+uaeme_licenses_prod:
+  target: prod
+  outputs:
+    prod:
+      type: duckdb
+      path: db-prod.duckdb
+      threads: 4 

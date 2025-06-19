@@ -27,7 +27,48 @@ pip install mxcp
 
 ---
 
-### 3. **Prepare the Database with dbt**
+### 3. **Data Setup**
+
+The project uses UAE business license data. You have three options for setting up the data:
+
+#### Option 1: Use Sample Data (Quick Start)
+A small sample dataset (`seeds/licenses_sample.csv`) is included in the repository for testing and development. This contains synthetic data that maintains the same patterns and distributions as the real data.
+
+#### Option 2: Generate Synthetic Data
+Generate your own synthetic dataset of any size:
+
+```bash
+# Generate 1000 synthetic records
+./scripts/generate_synthetic_data.py \
+  --pattern-file seeds/licenses_sample.csv \
+  --output seeds/licenses.csv \
+  --sample-size 1000
+```
+
+The synthetic data:
+- Maintains real patterns and distributions
+- Uses realistic but fake business names and addresses
+- Preserves real emirate locations and business codes
+- Randomizes sensitive information (owner details, exact coordinates)
+
+#### Option 3: Use Real Data
+If you have access to the RAW Labs private test data bucket, you can download the real dataset:
+
+```bash
+# Download the real dataset
+./scripts/download_real_data.py --output seeds/licenses.csv
+```
+
+Requirements:
+- AWS credentials configured
+- Access to `s3://rawlabs-private-test-data/projects/uae_business_licenses/`
+- Sufficient disk space (~3GBs)
+
+The staging model (`models/staging/src_licenses.sql`) will automatically use whichever data file you choose to provide.
+
+---
+
+### 4. **Prepare the Database with dbt**
 
 **Load raw data using a staging model:**
 
@@ -49,7 +90,7 @@ dbt run
 
 ---
 
-### 4. **Start the MXCP Server**
+### 5. **Start the MXCP Server**
 
 #### **Option 1: Standard (recommended for development)**
 ```bash
@@ -103,7 +144,7 @@ The following sensitive information is protected for guest users:
 
 Admin users have full access to all fields and functionality.
 
-### 5. **Project Structure**
+### 6. **Project Structure**
 
 - `prompts/` — LLM prompt YAMLs (e.g., onboarding, guidance)
 - `tools/` — MXCP tool YAMLs and SQLs (search, aggregate, timeseries, geo, categorical values, etc.)
@@ -115,7 +156,7 @@ Admin users have full access to all fields and functionality.
 
 ---
 
-### 6. **Claude Desktop Integration**
+### 7. **Claude Desktop Integration**
 
 To integrate with Claude Desktop, add the following to your Claude Desktop configuration:
 
@@ -146,7 +187,7 @@ Replace:
 
 The server will start with clean stdio output suitable for LLM integration.
 
-### 11. **Requirements**
+### 8. **Requirements**
 
 ```
 pip install mxcp

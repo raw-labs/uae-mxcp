@@ -6,3 +6,17 @@ duckdb
 pandas
 pyyaml
 # For LLM/Claude Desktop integration, no Python package is required here 
+
+# Data handling
+numpy
+
+# Synthetic data generation
+Faker
+arabic-reshaper
+python-bidi
+
+# AWS
+boto3
+
+# Development
+duckdb>=0.9.0 

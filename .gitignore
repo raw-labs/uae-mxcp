@@ -4,4 +4,13 @@ logs/
 logs-*
 .env/
 __pycache__/
-.dbt/ 
+.dbt/
+
+# Large data files
+seeds/licenses.csv
+seeds/*.csv
+data/*.csv
+
+# Sample data is allowed
+!seeds/licenses_sample.csv
+!data/licenses_sample.csv 
