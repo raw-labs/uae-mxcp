@@ -1,13 +1,49 @@
 version: 2
 models:
   - name: dim_licenses
-    description: Cleaned, typed license dimension with surrogate PK and decimal coordinates.
+    description: "Dimension table for UAE business licenses, containing one record per license."
     columns:
       - name: license_pk
-        tests: [unique, not_null]
-      - name: bl_est_date_d
-        tests: [not_null]
-      - name: bl_status_en
+        description: "The unique primary key for each license, generated as a hash of authority and license number."
         tests:
+          - unique
+          - not_null
+
+      - name: bl_num
+        description: "The official business license number (BL #)."
+        tests:
+          - not_null
+
+      - name: emirate_name_en
+        description: "The English name of the Emirate where the license is registered."
+        tests:
+          - not_null
           - accepted_values:
-              values: ["Current","Cancelled","Under-liquidation","Expired","Suspended"]
+              values: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain']
+
+      - name: issuance_authority_en
+        description: "The English name of the license issuing authority."
+        tests:
+          - not_null
+
+      - name: bl_status_en
+        description: "The current status of the business license (e.g., Active, Expired)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Active', 'Expired', 'Cancelled', 'Current', 'On Hold', 'In  Active']
+
+      - name: bl_legal_type_en
+        description: "The legal type of the business entity."
+        tests:
+          - not_null
+
+      - name: bl_est_date
+        description: "The establishment date of the license."
+        tests:
+          - not_null
+
+      - name: bl_exp_date
+        description: "The expiration date of the license."
+        tests:
+          - not_null

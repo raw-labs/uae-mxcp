@@ -70,23 +70,51 @@ The staging model (`models/staging/src_licenses.sql`) will automatically use whi
 
 ### 4. **Prepare the Database with dbt**
 
-**Load raw data using a staging model:**
+The project uses dbt (data build tool) to transform raw license data into analytics-ready models. Follow these steps:
 
-Instead of using `dbt seed`, this project loads the raw data file (e.g., `data/licenses.csv`) directly in a staging model using DuckDB's `read_csv_auto` function. This approach allows for preprocessing and transformation as part of the model logic.
+1. **Configure your dbt profile**
 
-Example staging model (`models/staging/stg_licenses.sql`):
+The project expects a profile named `uaeme_licenses_prod` in your `profiles.yml`.
 
-```sql
-select * from read_csv_auto('data/licenses.csv', header=True)
-```
+2. **Provide the licenses data file path**
 
-You do not need a `seeds/` directory unless you use `dbt seed`. It is safe to omit or rename it if not used.
-
-**Run dbt models** (builds all tables/views):
+The staging model requires you to specify the path to your licenses CSV file using the `licenses_file` variable:
 
 ```bash
-dbt run
+dbt run --vars '{"licenses_file": "/path/to/your/licenses.csv"}'
 ```
+
+3. **Understanding the data pipeline**
+
+The project uses a three-layer transformation approach:
+- `models/staging/src_licenses.sql`: Sources raw data from CSV
+- `models/staging/stg_licenses_raw.sql`: Initial data cleaning and type casting
+- `models/marts/`: Business-level transformations
+
+4. **Run the models**
+
+```bash
+# Run all models
+dbt run
+
+# Run specific model
+dbt run --select staging.src_licenses
+```
+
+5. **Verify the setup**
+
+```bash
+# Test all models
+dbt test
+
+# Show documentation
+dbt docs generate
+dbt docs serve
+```
+
+The models will create tables/views in your DuckDB database (`db-prod.duckdb`).
+
+> **Note:** The project uses DuckDB's `read_csv_auto` function with specific parameters (delimiter='|', all_varchar=true) for optimal data loading. Make sure your CSV file matches this format.
 
 ---
 

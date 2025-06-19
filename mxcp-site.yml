@@ -4,8 +4,8 @@ profile: prod
 dbt:
   enabled: true
 sql_tools:
-  enabled: true
+  enabled: false
 profiles:
   prod:
     audit:
-      enabled: true
+  enabled: true

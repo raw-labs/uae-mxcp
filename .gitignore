@@ -11,6 +11,11 @@ seeds/licenses.csv
 seeds/*.csv
 data/*.csv
 
+# Project dependencies & local configs
+dbt_packages/
+.user.yml
+.cursor/
+
 # Sample data is allowed
 !seeds/licenses_sample.csv
 !data/licenses_sample.csv 

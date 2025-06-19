@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-
+"""
+A simple, Faker-based synthetic data generator for UAE business licenses.
+This script generates data based on pre-defined, realistic data profiles
+and distributions, without needing a source pattern file.
+"""
 import pandas as pd
 import numpy as np
 from faker import Faker
@@ -8,183 +12,226 @@ from bidi.algorithm import get_display
 import random
 import argparse
 from pathlib import Path
-import sys
 import hashlib
+from datetime import datetime, timedelta
+import logging
 
-def load_patterns(pattern_file):
-    """Load real data patterns to maintain distributions."""
-    try:
-        # Set low_memory=False to handle mixed types
-        df = pd.read_csv(pattern_file, sep='|', low_memory=False)
-        
-        # Create emirate to authority mapping
-        emirate_authorities = {}
-        for emirate in df['Emirate Name En'].unique():
-            authorities = df[df['Emirate Name En'] == emirate]['Issuance Authority En'].unique()
-            emirate_authorities[emirate] = authorities if len(authorities) > 0 else ['Default Authority']
-        
-        patterns = {
-            'emirate': df['Emirate Name En'].unique(),
-            'emirate_authorities': emirate_authorities,
-            'status': df['BL Status EN'].unique(),
-            'legal_type': df['BL Legal Type En'].unique(),
-            'license_type': df['BL Type En'].unique(),
-            'business_codes': df[['Business Activity Code', 'Business Activity Desc En', 'Business Activity Desc Ar']].drop_duplicates(),
-            'relationship_types': ['Owner', 'Partner', 'Manager', 'Director', 'Shareholder', 'Agent'],  # Default values if not in pattern file
-            'nationalities': df['Owner Nationality En'].unique(),
-            'genders': df['Owner Gender'].unique()
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
+class SyntheticDataGenerator:
+    """Generates synthetic UAE business license data using Faker and pre-defined distributions."""
+
+    def __init__(self):
+        self.fake_en = Faker()
+        self.fake_ar = Faker('ar_AA')
+        self.reshaper = ArabicReshaper()
+
+        # --- Pre-defined Data Profiles & Distributions ---
+
+        self.emirates = {
+            'Dubai': 0.6,
+            'Abu Dhabi': 0.2,
+            'Sharjah': 0.1,
+            'Ajman': 0.04,
+            'Ras Al Khaimah': 0.03,
+            'Fujairah': 0.02,
+            'Umm Al Quwain': 0.01
         }
-        return patterns
-    except Exception as e:
-        print(f"Error loading pattern file: {e}", file=sys.stderr)
-        sys.exit(1)
+        self.emirates_ar = {
+            'Dubai': 'دبي', 'Abu Dhabi': 'أبو ظبي', 'Sharjah': 'الشارقة',
+            'Ajman': 'عجمان', 'Ras Al Khaimah': 'رأس الخيمة', 'Fujairah': 'الفجيرة',
+            'Umm Al Quwain': 'أم القيوين'
+        }
 
-def generate_synthetic_licenses(patterns, sample_size=1000):
-    """Generate synthetic license data maintaining real patterns."""
-    fake_en = Faker()
-    fake_ar = Faker('ar_AA')
-    reshaper = ArabicReshaper()
-    
-    # Initialize empty DataFrame
-    synthetic = pd.DataFrame()
-    
-    # Generate data maintaining distributions
-    synthetic['emirate_name_en'] = np.random.choice(patterns['emirate'], size=sample_size)
-    synthetic['emirate_name_ar'] = synthetic['emirate_name_en'].map({
-        'Dubai': 'دبي',
-        'Abu Dhabi': 'أبو ظبي',
-        'Sharjah': 'الشارقة',
-        'Ajman': 'عجمان',
-        'Ras Al Khaimah': 'رأس الخيمة',
-        'Fujairah': 'الفجيرة',
-        'Umm Al Quwain': 'أم القيوين'
-    })
-    
-    # Authority based on emirate using the mapping
-    synthetic['issuance_authority_en'] = synthetic['emirate_name_en'].apply(
-        lambda x: np.random.choice(patterns['emirate_authorities'][x])
-    )
-    
-    # Business names
-    synthetic['bl_name_en'] = [
-        f"{fake_en.company()} {random.choice(['LLC', 'Trading', 'Services', 'International', 'Group', 'FZ-LLC', 'DMCC'])}"
-        for _ in range(sample_size)
-    ]
-    synthetic['bl_name_ar'] = [
-        get_display(reshaper.reshape(f"شركة {fake_ar.company()}"))
-        for _ in range(sample_size)
-    ]
-    
-    # License numbers
-    synthetic['bl'] = [f"BL-{random.randint(100000, 999999)}" for _ in range(sample_size)]
-    synthetic['bl_cbls'] = [f"CBLS-{random.randint(10000, 99999)}" for _ in range(sample_size)]
-    
-    # Dates
-    today = pd.Timestamp.now()
-    synthetic['bl_est_date'] = [
-        (today - pd.Timedelta(days=random.randint(0, 3650))).strftime('%d/%m/%Y')
-        for _ in range(sample_size)
-    ]
-    synthetic['bl_exp_date'] = [
-        (pd.Timestamp(d) + pd.Timedelta(days=random.randint(365, 1095))).strftime('%d/%m/%Y')
-        for d in synthetic['bl_est_date']
-    ]
-    
-    # Status and types
-    synthetic['bl_status_en'] = np.random.choice(patterns['status'], size=sample_size)
-    synthetic['bl_legal_type_en'] = np.random.choice(patterns['legal_type'], size=sample_size)
-    synthetic['bl_type_en'] = np.random.choice(patterns['license_type'], size=sample_size)
-    
-    # Business activities
-    activities = patterns['business_codes'].sample(n=sample_size, replace=True)
-    synthetic['business_activity_code'] = activities['Business Activity Code'].values
-    synthetic['business_activity_desc_en'] = activities['Business Activity Desc En'].values
-    synthetic['business_activity_desc_ar'] = activities['Business Activity Desc Ar'].values
-    
-    # Owner information
-    synthetic['owner_nationality_en'] = np.random.choice(patterns['nationalities'], size=sample_size)
-    synthetic['owner_gender'] = np.random.choice(patterns['genders'], size=sample_size)
-    synthetic['relationship_type_en'] = np.random.choice(patterns['relationship_types'], size=sample_size)
-    
-    # Addresses and coordinates (based on emirate)
-    coords = {
-        'Dubai': (25.2048, 55.2708),
-        'Abu Dhabi': (24.4539, 54.3773),
-        'Sharjah': (25.3463, 55.4209),
-        'Ajman': (25.4052, 55.5136),
-        'Ras Al Khaimah': (25.7895, 55.9432),
-        'Fujairah': (25.1288, 56.3265),
-        'Umm Al Quwain': (25.0000, 55.0000)  # Fixed coordinates
-    }
-    
-    synthetic['bl_full_address'] = synthetic.apply(
-        lambda row: f"Unit {random.randint(100,999)}, {fake_en.street_address()}, {row['emirate_name_en']}", 
-        axis=1
-    )
-    
-    # Generate license_pk using md5 hash of issuance_authority_en and bl
-    synthetic['license_pk'] = synthetic.apply(
-        lambda row: hashlib.md5(f"{row['issuance_authority_en']}|{row['bl']}".encode()).hexdigest(),
-        axis=1
-    )
-    
-    # Ensure columns are in the correct order
-    column_order = [
-        'license_pk',
-        'emirate_name_en',
-        'emirate_name_ar',
-        'issuance_authority_en',
-        'bl_name_en',
-        'bl_name_ar',
-        'bl',
-        'bl_cbls',
-        'bl_est_date',
-        'bl_exp_date',
-        'bl_status_en',
-        'bl_legal_type_en',
-        'bl_type_en',
-        'business_activity_code',
-        'business_activity_desc_en',
-        'business_activity_desc_ar',
-        'owner_nationality_en',
-        'owner_gender',
-        'relationship_type_en',
-        'bl_full_address',
-        'license_latitude',
-        'license_longitude'
-    ]
-    
-    # Add coordinates at the end
-    synthetic['license_latitude'] = synthetic['emirate_name_en'].apply(
-        lambda x: f"{coords.get(x, (25.0, 55.0))[0]}°N"  # Format as DMS
-    )
-    synthetic['license_longitude'] = synthetic['emirate_name_en'].apply(
-        lambda x: f"{coords.get(x, (25.0, 55.0))[1]}°E"  # Format as DMS
-    )
-    
-    synthetic = synthetic[column_order]
-    return synthetic
+        self.authorities = {
+            'Dubai': {'Department of Economic Development': 0.7, 'Dubai Silicon Oasis Authority': 0.1, 'DMCC': 0.1, 'Dubai South': 0.1},
+            'Abu Dhabi': {'Abu Dhabi Department of Economic Development': 0.8, 'ADGM': 0.1, 'KEZAD': 0.1},
+            'Sharjah': {'Sharjah Economic Development Department': 0.9, 'Sharjah Publishing City': 0.1},
+            'default': {'Department of Economic Development': 0.7, 'Municipality': 0.3}
+        }
+
+        self.statuses = {'Active': 0.8, 'Expired': 0.15, 'Cancelled': 0.05}
+        self.legal_types = {'LLC': 0.6, 'Sole Establishment': 0.2, 'Civil Company': 0.1, 'Free Zone Establishment': 0.1}
+        self.license_types = {'Commercial': 0.5, 'Professional': 0.4, 'Industrial': 0.1}
+
+        self.nationalities = {
+            'Emirati': 0.3, 'Indian': 0.2, 'Pakistani': 0.1, 'Egyptian': 0.05,
+            'British': 0.05, 'Filipino': 0.05, 'Other': 0.25
+        }
+        self.genders = {'Male': 0.7, 'Female': 0.3}
+        self.relationship_types = {'Owner': 0.6, 'Partner': 0.3, 'Manager': 0.1}
+
+        self.activities = [
+            (829900, "Business Support Service Activities", "أنشطة خدمات دعم الأعمال"),
+            (477100, "Retail sale of clothing, footwear and textiles", "تجارة التجزئة في الملابس والأحذية والمنسوجات"),
+            (620100, "Computer programming activities", "أنشطة برمجة الكمبيوتر"),
+            (561000, "Restaurants and mobile food service activities", "المطاعم وأنشطة خدمات الطعام المتنقلة"),
+            (702000, "Management consultancy activities", "أنشطة استشارات الإدارة"),
+        ]
+
+        self.coordinates = {
+            'Dubai': {'lat': (25.0, 25.3), 'long': (55.0, 55.4)},
+            'Abu Dhabi': {'lat': (24.2, 24.5), 'long': (54.3, 54.7)},
+            'Sharjah': {'lat': (25.3, 25.4), 'long': (55.4, 55.6)},
+            'Ajman': {'lat': (25.35, 25.45), 'long': (55.4, 55.55)},
+            'Ras Al Khaimah': {'lat': (25.6, 25.8), 'long': (55.9, 56.1)},
+            'Fujairah': {'lat': (25.1, 25.2), 'long': (56.3, 56.4)},
+            'Umm Al Quwain': {'lat': (25.5, 25.6), 'long': (55.5, 55.7)},
+        }
+
+    def _choose_weighted(self, choices: dict):
+        """Choose an item from a dictionary of choices with weights."""
+        return np.random.choice(list(choices.keys()), p=list(choices.values()))
+
+    def _generate_business_name(self, license_type: str) -> tuple:
+        """Generate realistic business names in English and Arabic."""
+        name = self.fake_en.company()
+        if license_type == 'Commercial':
+            suffix = random.choice(['Trading', 'LLC', 'FZE'])
+        elif license_type == 'Professional':
+            suffix = random.choice(['Consultancy', 'Services', 'Management'])
+        else:
+            suffix = random.choice(['Industries', 'Manufacturing'])
+
+        en_name = f"{name} {suffix}"
+        ar_name = get_display(self.reshaper.reshape(f"شركة {self.fake_ar.company()} {suffix}"))
+        return en_name, ar_name
+
+    def _generate_coordinate(self, emirate: str, coord_type: str) -> str:
+        """Generate a random coordinate within the emirate's bounding box."""
+        bounds = self.coordinates.get(emirate, self.coordinates['Dubai'])
+        lat_min, lat_max = bounds['lat']
+        long_min, long_max = bounds['long']
+
+        if coord_type == 'lat':
+            val = random.uniform(lat_min, lat_max)
+            return f"{val:.4f}°N"
+        else:
+            val = random.uniform(long_min, long_max)
+            return f"{val:.4f}°E"
+
+    def generate(self, sample_size: int) -> pd.DataFrame:
+        """Generate a DataFrame of synthetic license data."""
+        logger.info(f"Starting generation of {sample_size} records...")
+        data = []
+        used_bl_numbers = set()
+        used_cbls_numbers = set()
+
+        for i in range(sample_size):
+            if (i + 1) % 100 == 0:
+                logger.info(f"Generated {i + 1}/{sample_size} records...")
+
+            # Core Attributes
+            emirate_en = self._choose_weighted(self.emirates)
+            emirate_ar = self.emirates_ar[emirate_en]
+            authority_choices = self.authorities.get(emirate_en, self.authorities['default'])
+            authority = self._choose_weighted(authority_choices)
+            license_type = self._choose_weighted(self.license_types)
+
+            # Business Name
+            bl_name_en, bl_name_ar = self._generate_business_name(license_type)
+
+            # Unique License Numbers
+            while True:
+                bl_num = f"BL-{random.randint(100000, 999999)}"
+                if bl_num not in used_bl_numbers:
+                    used_bl_numbers.add(bl_num)
+                    break
+            while True:
+                cbls_num = f"CBLS-{random.randint(10000, 99999)}"
+                if cbls_num not in used_cbls_numbers:
+                    used_cbls_numbers.add(cbls_num)
+                    break
+
+            # Dates
+            est_date = self.fake_en.date_time_between(start_date='-10y', end_date='now').strftime('%d/%m/%Y')
+            duration_days = int(np.random.normal(365, 30))
+            exp_date = (datetime.strptime(est_date, '%d/%m/%Y') + timedelta(days=duration_days)).strftime('%d/%m/%Y')
+
+            # Categorical data
+            status = self._choose_weighted(self.statuses)
+            legal_type = self._choose_weighted(self.legal_types)
+            nationality = self._choose_weighted(self.nationalities)
+            gender = self._choose_weighted(self.genders)
+            relationship = self._choose_weighted(self.relationship_types)
+            activity_code, activity_en, activity_ar = random.choice(self.activities)
+
+            # Location
+            address = self.fake_en.address().replace('\n', ', ')
+            lat = self._generate_coordinate(emirate_en, 'lat')
+            long = self._generate_coordinate(emirate_en, 'long')
+
+            # Create Record
+            record = {
+                'Emirate Name En': emirate_en,
+                'Emirate Name Ar': emirate_ar,
+                'Issuance Authority En': authority,
+                'BL Name En': bl_name_en,
+                'BL Name Ar': bl_name_ar,
+                'BL #': bl_num,
+                'BL CBLS #': cbls_num,
+                'BL Est Date': est_date,
+                'BL Exp Date': exp_date,
+                'BL Status EN': status,
+                'BL Legal Type En': legal_type,
+                'BL Type En': license_type,
+                'Business Activity Code': activity_code,
+                'Business Activity Desc En': activity_en,
+                'Business Activity Desc Ar': activity_ar,
+                'Owner Nationality En': nationality,
+                'Owner Gender': gender,
+                'Relationship Type En': relationship,
+                'BL Full Address': address,
+                'License Latitude': lat,
+                'License Longitude': long,
+            }
+            data.append(record)
+
+        df = pd.DataFrame(data)
+
+        # Add a unique primary key
+        df['license_pk'] = df.apply(
+            lambda row: hashlib.md5(f"{row['Issuance Authority En']}|{row['BL #']}".encode()).hexdigest(),
+            axis=1
+        )
+
+        logger.info("Data generation complete.")
+        return df
+
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate synthetic UAE business license data')
-    parser.add_argument('--pattern-file', type=str, required=True,
-                      help='Path to real data file to extract patterns from')
-    parser.add_argument('--output', type=str, required=True,
-                      help='Output file path (CSV)')
-    parser.add_argument('--sample-size', type=int, default=1000,
-                      help='Number of synthetic records to generate')
-    
+    parser = argparse.ArgumentParser(description='Generate synthetic UAE business license data.')
+    parser.add_argument('--output', type=str, required=True, help='Output file path (CSV)')
+    parser.add_argument('--sample-size', type=int, default=1000, help='Number of synthetic records to generate')
+    parser.add_argument('--seed', type=int, help='Random seed for reproducibility')
+    parser.add_argument('--log-level', type=str, default='INFO',
+                      choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                      help='Set the logging level')
+
     args = parser.parse_args()
-    
-    print(f"Loading patterns from {args.pattern_file}...")
-    patterns = load_patterns(args.pattern_file)
-    
-    print(f"Generating {args.sample_size} synthetic records...")
-    synthetic = generate_synthetic_licenses(patterns, args.sample_size)
-    
-    print(f"Saving to {args.output}...")
-    synthetic.to_csv(args.output, sep='|', index=False)
-    print("Done!")
+
+    # Set up logging
+    log_level = getattr(logging, args.log_level.upper(), logging.INFO)
+    logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    if args.seed:
+        logger.info(f"Using random seed: {args.seed}")
+        random.seed(args.seed)
+        np.random.seed(args.seed)
+        Faker.seed(args.seed)
+
+    generator = SyntheticDataGenerator()
+    synthetic_data = generator.generate(args.sample_size)
+
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    synthetic_data.to_csv(output_path, index=False, sep='|', encoding='utf-8')
+
+    logger.info(f"Successfully generated {args.sample_size} records and saved to {args.output}")
+
 
 if __name__ == '__main__':
     main() 
