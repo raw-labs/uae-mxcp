@@ -1,0 +1,7 @@
+target/
+logs/
+*.duckdb
+logs-*
+.env/
+__pycache__/
+.dbt/ 

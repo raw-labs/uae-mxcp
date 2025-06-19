@@ -1,0 +1,11 @@
+mxcp: 1.0.0
+project: uaeme-licenses-mxcp
+profile: prod
+dbt:
+  enabled: true
+sql_tools:
+  enabled: true
+profiles:
+  prod:
+    audit:
+      enabled: true

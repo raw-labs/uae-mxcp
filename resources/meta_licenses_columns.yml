@@ -1,0 +1,18 @@
+mxcp: 1.0.0
+resource:
+  uri: "licenses://columns"
+  description: "List all columns/fields in the dim_licenses table."
+  mime_type: "application/json"
+  parameters: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        column_name: { type: string }
+        type: { type: string }
+  language: "sql"
+  source:
+    file: "../resources/meta_licenses_columns.sql"
+  enabled: true
+  policies: {} 

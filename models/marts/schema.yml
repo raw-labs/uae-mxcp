@@ -1,0 +1,13 @@
+version: 2
+models:
+  - name: dim_licenses
+    description: Cleaned, typed license dimension with surrogate PK and decimal coordinates.
+    columns:
+      - name: license_pk
+        tests: [unique, not_null]
+      - name: bl_est_date_d
+        tests: [not_null]
+      - name: bl_status_en
+        tests:
+          - accepted_values:
+              values: ["Current","Cancelled","Under-liquidation","Expired","Suspended"]

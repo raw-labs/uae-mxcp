@@ -1,0 +1,27 @@
+source:
+  file: "categorical_license_values.sql"
+enabled: true
+policies:
+  input:
+    - condition: >-
+        user.role == 'guest' && field in [
+          # Personal Information
+          'owner_nationality_en', 
+          'owner_nationality_ar', 
+          'owner_gender',
+          # Business Information
+          'bl_name_en',
+          'bl_name_ar',
+          'bl_cbls',
+          'business_activity_code',
+          'business_activity_desc_en',
+          'business_activity_desc_ar',
+          # Relationship Information
+          'relationship_type_en',
+          'relationship_type_ar',
+          'parent_licence_license_number',
+          'parent_license_issuance_authority_en',
+          'parent_license_issuance_authority_ar'
+        ]
+      action: deny
+      reason: "Guest users cannot access sensitive field categories" 

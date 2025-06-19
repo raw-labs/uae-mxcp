@@ -1,0 +1,8 @@
+mxcp
+mxcp-duckdb
+dbt-core
+dbt-duckdb
+duckdb
+pandas
+pyyaml
+# For LLM/Claude Desktop integration, no Python package is required here 

@@ -1,0 +1,6 @@
+version: 2
+models:
+  - name: stg_licenses_raw
+    columns:
+      - name: bl_num
+        tests: [not_null]
