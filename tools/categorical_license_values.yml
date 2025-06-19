@@ -1,52 +1,27 @@
-mxcp: "1.0.0"
-tool:
-  name: "get_categorical_values"
-  description: "Provides a list of distinct values for a given categorical field. If no field is provided, it returns all values for all supported fields."
-  parameters:
-    - name: "field"
-      type: "string"
-      required: false # This is optional, as the query can return all fields
-      description: "The categorical field for which to retrieve distinct values."
-      examples: ["emirate_name_en", "bl_status_en"]
-  return:
-    type: "array"
-    items:
-      type: "object"
-      properties:
-        field: { type: "string" }
-        value: { type: "string" }
-  source:
-    # This tool's SQL is located in the same directory.
-    file: "categorical_license_values.sql"
-  enabled: true
-  tests:
-    - name: "test_get_single_field"
-      description: "Tests retrieving values for a single field ('emirate_name_en')."
-      arguments:
-        - { key: "field", value: "emirate_name_en" }
-      result: ">= 1 row"
-    - name: "test_get_all_fields"
-      description: "Tests retrieving values for all fields when no argument is provided."
-      arguments: []
-      result: ">= 10 rows" # Expecting values from multiple fields
-  policies:
-    input:
-      - condition: >-
-          user.role == 'guest' && field in [
-            'owner_nationality_en',
-            'owner_nationality_ar',
-            'owner_gender',
-            'bl_name_en',
-            'bl_name_ar',
-            'bl_cbls',
-            'business_activity_code',
-            'business_activity_desc_en',
-            'business_activity_desc_ar',
-            'relationship_type_en',
-            'relationship_type_ar',
-            'parent_licence_license_number',
-            'parent_license_issuance_authority_en',
-            'parent_license_issuance_authority_ar'
-          ]
-        action: deny
-        reason: "Guest users cannot access sensitive field categories" 
+source:
+  file: "categorical_license_values.sql"
+enabled: true
+policies:
+  input:
+    - condition: >-
+        user.role == 'guest' && field in [
+          # Personal Information
+          'owner_nationality_en', 
+          'owner_nationality_ar', 
+          'owner_gender',
+          # Business Information
+          'bl_name_en',
+          'bl_name_ar',
+          'bl_cbls',
+          'business_activity_code',
+          'business_activity_desc_en',
+          'business_activity_desc_ar',
+          # Relationship Information
+          'relationship_type_en',
+          'relationship_type_ar',
+          'parent_licence_license_number',
+          'parent_license_issuance_authority_en',
+          'parent_license_issuance_authority_ar'
+        ]
+      action: deny
+      reason: "Guest users cannot access sensitive field categories" 
