@@ -8,4 +8,4 @@ sql_tools:
 profiles:
   prod:
     audit:
-  enabled: true
+      enabled: true

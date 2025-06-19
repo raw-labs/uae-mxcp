@@ -27,7 +27,6 @@ Before proposing any change, you **must** follow this protocol:
 1.  **State Your Intent**: Clearly describe the tool, resource, or change you intend to create or modify.
 2.  **Verify Pre-conditions**:
     - Confirm the git status is clean (`git status`).
-    - Confirm existing endpoints are valid (`mxcp test --validate-only`).
     - Confirm all tests pass (`mxcp test`).
 3.  **Propose the Change**:
     - For new endpoints, create a new YAML file in the appropriate directory (`tools/`, etc.).
@@ -94,7 +93,6 @@ tool:
 Use the `mxcp` command-line tool to manage the project.
 
 - `mxcp test`: Run all endpoint tests.
-- `mxcp test --validate-only`: Validate YAML structure without running tests.
 - `mxcp serve`: Start the local MCP server for manual testing.
 - `mxcp drift-detect`: Detect schema or behavioral drift over time.
 
