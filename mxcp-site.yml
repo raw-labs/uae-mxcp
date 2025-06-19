@@ -1,6 +1,11 @@
 mxcp: 1.0.0
 project: uaeme-licenses-mxcp
 profile: prod
+exclude:
+  - "target/"
+  - "dbt_packages/"
+  - "logs/"
+  - ".env/"
 dbt:
   enabled: true
 sql_tools:
