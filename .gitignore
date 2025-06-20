@@ -14,7 +14,6 @@ data/*.csv
 # Project dependencies & local configs
 dbt_packages/
 .user.yml
-.cursor/
 package-lock.yml
 
 # Sample data is allowed
