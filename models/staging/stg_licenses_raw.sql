@@ -1,4 +1,4 @@
-{{ config(materialized='view') }}
+{{ config(tags=["staging"], materialized='view') }}
 
 WITH src AS (
     SELECT * FROM {{ ref('src_licenses') }}
@@ -17,5 +17,5 @@ SELECT
       src.license_longitude, 'º','°'),'˚','°'),'′',''''),'’',''''),'″','"'),'”','"')
       AS license_longitude
 FROM src
--- DuckDB’s SELECT list rules: later columns override earlier ones,
+-- DuckDB's SELECT list rules: later columns override earlier ones,
 -- so the cleaned versions replace the raw duplicates automatically.

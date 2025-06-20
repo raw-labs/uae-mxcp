@@ -1,4 +1,4 @@
-{{ config(materialized='table') }}
+{{ config(materialized='table', tags=["marts"]) }}
 
 {% set dms_to_dd %}
 CREATE OR REPLACE MACRO dms_to_dd(dms) AS (

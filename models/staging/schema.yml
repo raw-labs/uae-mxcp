@@ -1,5 +1,8 @@
 version: 2
 models:
+  - name: src_licenses
+    tags: [staging]
   - name: stg_licenses_raw
+    tags: [staging]
     # No tests are needed here as the mart layer handles data quality.
     columns: []

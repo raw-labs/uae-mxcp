@@ -1,4 +1,4 @@
-{{ config(materialized='view') }}
+{{ config(tags=["staging"], materialized='view') }}
 
 {%- if not var('licenses_file', none) -%}
     {{ exceptions.raise_compiler_error("Please provide the licenses_file path using --vars '{\"licenses_file\": \"/path/to/your/licenses.csv\"}'") }}

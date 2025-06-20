@@ -2,6 +2,7 @@ version: 2
 models:
   - name: dim_licenses
     description: "Dimension table for UAE business licenses, containing one record per license."
+    tags: [marts]
     columns:
       - name: license_pk
         description: "The unique primary key for each license, generated as a hash of authority and license number."
