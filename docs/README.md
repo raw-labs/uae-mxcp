@@ -1,168 +1,130 @@
-# UAE Business Licenses MCP Project
+# UAE Business Licenses - MXCP Project
 
-This project provides a full-stack, enterprise-ready MCP (MXCP) server for querying UAE business license data, with LLM (Claude Desktop) integration, dbt data pipeline, and robust filter/value discovery.
-
----
-
-## **Quickstart**
-
-### 1. **Clone the Repository**
-
-```bash
-git clone <your-repo-url>
-cd uae-mxcp
-```
+This project provides a full-stack, enterprise-ready MXCP server for querying and analyzing a dataset of UAE business licenses. It features a dbt-powered data pipeline, robust data quality testing, and a suite of pre-built tools for search, aggregation, and geospatial analysis.
 
 ---
 
-### 2. **Set Up Python Environment**
+## Overview
 
-> **Note:** You need Python 3.8+ and `virtualenv` or `venv`.
+This repository is a complete, self-contained solution for turning a raw CSV data file into a queryable, production-ready set of API endpoints. It is designed to be used with the **RAW Labs MXCP** platform and can be integrated with LLMs like Claude for natural language querying.
 
-```bash
-python3 -m venv .env
-source .env/bin/activate
-pip install -r requirements.txt
-```
+### Key Features
 
----
-
-### 3. **Data Setup**
-
-The project uses UAE business license data. You have three options for setting up the data:
-
-#### Option 1: Use Sample Data (Recommended)
-A small, synthetic sample dataset (`seeds/licenses_sample.csv`) is included. This is the fastest way to get started. All commands below assume you are using this file.
-
-#### Option 2: Generate a Larger Synthetic Dataset
-If you need more data, you can generate a larger synthetic file:
-
-```bash
-# Generate 10,000 synthetic records
-./scripts/generate_synthetic_data.py --output seeds/licenses_large_sample.csv --sample-size 10000
-```
-You would then use `--vars '{"licenses_file": "seeds/licenses_large_sample.csv"}'` in the subsequent dbt commands.
-
-#### Option 3: Use Real Data (Requires AWS Access)
-If you have access to the RAW Labs private S3 bucket, you can download the real dataset using the provided script.
-
-```bash
-# Download the real dataset to the seeds directory
-./scripts/download_real_data.py --output seeds/licenses.csv
-```
-This requires:
-- AWS credentials configured locally.
-- Access to the `s3://rawlabs-private-test-data` S3 bucket.
-
-Once `seeds/licenses.csv` is downloaded, you can run the dbt models against it:
-```bash
-dbt run --vars '{"licenses_file": "seeds/licenses.csv"}'
-```
+| Feature                  | Description                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **dbt Data Pipeline**    | Uses dbt to transform raw CSV data into a clean, analytics-ready data model in a local DuckDB database.                                      |
+| **Robust Data Testing**  | Includes 17+ data tests (both schema and custom SQL tests) to ensure data quality and integrity.                                           |
+| **MXCP Tools**           | Provides a suite of tools for searching, aggregating, and analyzing license data.                                                          |
+| **Synthetic Data**       | Comes with a `seeds/licenses_sample.csv` and a script to generate larger, realistic datasets for development and testing.                    |
+| **Role-Based Policies**  | Demonstrates data masking and access control policies for different user roles (e.g., `guest` vs. `admin`).                                  |
+| **LLM Integration Ready**| Includes a clean server startup script (`start-mcp.sh`) for easy integration with platforms like Claude Desktop.                           |
 
 ---
 
-### 4. **Prepare the Database with dbt**
+## Installation
 
-The project uses dbt (data build tool) to transform raw license data from a source CSV into analytics-ready models in a DuckDB database.
+> **Prerequisites:** You need Python 3.8+ and `git`.
 
-1. **Install dbt dependencies**
-```bash
-dbt deps
-```
+1.  **Clone the Repository**
+    ```bash
+    git clone <your-repo-url>
+    cd uae-mxcp
+    ```
 
-2. **Run the dbt models**
+2.  **Set Up Python Environment & Dependencies**
+    ```bash
+    python3 -m venv .env
+    source .env/bin/activate
+    pip install -r requirements.txt
+    dbt deps
+    ```
 
-The staging model requires you to specify the path to your licenses CSV file using the `licenses_file` variable.
+---
+
+## Usage: A Step-by-Step Workflow
+
+This workflow guides you through setting up the database and running the server using the default sample data.
+
+### Step 1: Build the Database
+
+The core of this project is its dbt pipeline, which reads a source CSV file and builds a DuckDB database (`db-prod.duckdb`).
 
 ```bash
 # Build all models using the default sample file
 dbt run --vars '{"licenses_file": "seeds/licenses_sample.csv"}'
-
-# If you generated a larger file, use this command instead
-# dbt run --vars '{"licenses_file": "seeds/licenses_large_sample.csv"}'
 ```
 
-The `dbt run` command executes the models that read the CSV and build the tables in your local DuckDB database (`db-prod.duckdb`).
+This command tells dbt to execute all models, using the `licenses_file` variable to find the source data.
 
-3. **Test the data**
+### Step 2: Run Data Quality Tests
+
+After building the database, run the test suite to ensure the data is clean and valid.
+
 ```bash
-# Test the models against the data from the sample file
+# Test the models against the loaded data
 dbt test --vars '{"licenses_file": "seeds/licenses_sample.csv"}'
 ```
+This command executes all 17+ tests, including schema tests and the custom SQL tests found in the `tests/` directory.
 
----
+### Step 3: Start the MXCP Server
 
-### 5. **Start the MXCP Server**
+With a clean, tested database, you can now start the MXCP server to expose the query tools.
 
-You have two options for starting the server:
-
-#### Option 1: Standard Development Server
-This is the best option for most development tasks. It shows full logs and debug information.
 ```bash
+# For standard development with full logging
 mxcp serve
-```
 
-#### Option 2: Clean Server for LLM Integration
-This project includes a wrapper script, `start-mcp.sh`, which is optimized for LLM integration (like with Claude Desktop). It provides clean stdio output by suppressing logs.
-```bash
-# Start as guest user (default)
+# OR, for clean LLM integration
 ./start-mcp.sh
-
-# Start as admin user (for demo purposes)
-./start-mcp.sh --role admin
-
-# See all options
-./start-mcp.sh --help
 ```
-
-The server provides a set of tools for querying the license data. Policies are in place to restrict access for a `guest` user, but role enforcement must be handled by a proxy layer.
-
-The following sensitive information is protected for guest users:
-
-1. **Personal Information:**
-   - Owner nationality (EN/AR)
-   - Owner gender
-   - Full address
-
-2. **Business Information:**
-   - Trade names (EN/AR)
-   - CBLS number
-   - Business activity codes and descriptions
-   - Parent license numbers
-
-3. **Relationship Information:**
-   - Relationship types (EN/AR)
-   - Parent license authorities (EN/AR)
-
-4. **Location Information:**
-   - Precise coordinates (latitude/longitude)
-   - Exact location data
-
-**Restrictions by Tool:**
-- **Search Tool:** All sensitive fields are masked
-- **Geo Tool:** Sensitive fields and precise locations are masked
-- **Aggregate Tool:** Cannot aggregate by sensitive fields
-- **Timeseries Tool:** Cannot filter by sensitive fields
-- **Categorical Values Tool:** Cannot access sensitive field categories
-
-Admin users have full access to all fields and functionality.
-
-### 6. **Project Structure**
-
-- `prompts/` — LLM prompt YAMLs (e.g., onboarding, guidance)
-- `tools/` — MXCP tool YAMLs and SQLs (search, aggregate, timeseries, geo, categorical values, etc.)
-- `resources/` — Resource YAMLs and SQLs (e.g., metadata endpoints)
-- `models/` — dbt models for data transformation.
-- `seeds/` — **Source Data Directory**. This directory holds the source CSV files (e.g., `licenses_sample.csv`). **This project does NOT use the `dbt seed` command.** The models in the `models/` directory read directly from these files.
-- `db-prod.duckdb` — Main DuckDB database (generated by dbt).
-- `scripts/` — Contains helper scripts, like the synthetic data generator.
-- `start-mcp.sh` — Clean server startup script for LLM integration.
 
 ---
 
-### 7. **Claude Desktop Integration**
+## Advanced Topics
 
-To integrate with Claude Desktop, add the following to your Claude Desktop configuration:
+### Working with Different Data Files
+
+The project is designed to work with any compatible CSV file.
+
+-   **To generate a larger synthetic file:**
+    ```bash
+    ./scripts/generate_synthetic_data.py --output seeds/licenses_large_sample.csv --sample-size 10000
+    ```
+    Then run `dbt run` and `dbt test` with `--vars '{"licenses_file": "seeds/licenses_large_sample.csv"}'`.
+
+-   **To use the real dataset (requires AWS access):**
+    ```bash
+    ./scripts/download_real_data.py --output seeds/licenses.csv
+    ```
+    Then run `dbt run` and `dbt test` with `--vars '{"licenses_file": "seeds/licenses.csv"}'`.
+
+### Key Project Concepts
+
+> #### Data Loading: No `dbt seed`
+> This project **does not** use the `dbt seed` command. Instead, the staging models read CSV files directly from the `seeds/` directory using DuckDB's `read_csv_auto` function. This is a deliberate design choice for performance and flexibility.
+
+> #### Data Testing: Schema and Custom Tests
+> The project uses two types of dbt tests:
+> 1.  **Schema Tests:** Defined in `.yml` files (e.g., `not_null`).
+> 2.  **Custom Data Tests:** Custom SQL queries in the `tests/` directory that check for complex business rules. `dbt test` runs both types automatically.
+
+### Project Structure
+
+- `docs/`: Project documentation, including this README.
+- `models/`: The core dbt models for data transformation.
+- `prompts/`: LLM prompt definitions for the MXCP server.
+- `resources/`: MXCP resource definitions.
+- `scripts/`: Helper scripts for data generation and downloading.
+- `seeds/`: **Source Data Directory**. Holds the source CSV files.
+- `tests/`: Custom dbt data tests written in SQL.
+- `tools/`: The main MXCP tool definitions and their underlying SQL queries.
+- `start-mcp.sh`: A wrapper script for starting the server with clean output.
+
+---
+
+### LLM Integration (Claude Desktop)
+
+To integrate with Claude Desktop, add the following to your configuration:
 
 ```json
 {
@@ -181,11 +143,6 @@ To integrate with Claude Desktop, add the following to your Claude Desktop confi
   }
 }
 ```
+> **Note:** The `--role` flag is for demonstration purposes. Role-based access control policies are defined in the tool YAMLs but require a proxy layer to enforce.
 
-> **Note:** Role-based access control is defined in the tool policies but is not enforced by `mxcp serve`. A proxy or gateway is required to pass user context (like `role`) to the server. The `--role` flag in the script and config is for demonstration purposes.
-
-Replace:
-- `/path/to/uae-mxcp` with your project path
-- `/home/your-username` with your home directory
-
-The server will start with clean stdio output suitable for LLM integration.
+Replace `/path/to/uae-mxcp` and `/home/your-username` with your local paths.
