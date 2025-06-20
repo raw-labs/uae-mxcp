@@ -35,17 +35,28 @@ class ToolGenerator:
         if search_tool:
             tools.append(search_tool)
         
-        # Generate filter tool if entity has status fields
-        if self._has_status_fields(entity):
-            filter_tool = self._generate_filter_tool(entity)
-            if filter_tool:
-                tools.append(filter_tool)
-        
         # Generate analytics tool if entity has metrics
         if self._has_metric_fields(entity):
             analytics_tool = self._generate_analytics_tool(entity)
             if analytics_tool:
                 tools.append(analytics_tool)
+        
+        # Generate aggregation tool
+        aggregation_tool = self._generate_aggregation_tool(entity)
+        if aggregation_tool:
+            tools.append(aggregation_tool)
+        
+        # Generate time series tool if entity has temporal fields
+        if self._has_temporal_fields(entity):
+            timeseries_tool = self._generate_timeseries_tool(entity)
+            if timeseries_tool:
+                tools.append(timeseries_tool)
+        
+        # Generate geographic tool if entity has geographic fields
+        if self._has_geographic_fields(entity):
+            geo_tool = self._generate_geographic_tool(entity)
+            if geo_tool:
+                tools.append(geo_tool)
         
         # Generate relationship navigation tools
         for rel_name, rel_info in entity.relationships.items():
@@ -58,62 +69,107 @@ class ToolGenerator:
     
     def _generate_search_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
         """Generate a search tool for the entity"""
-        # Find searchable fields
-        searchable_fields = [
-            col for col in entity.columns
-            if col.classification in [
-                ColumnClassification.DESCRIPTIVE,
-                ColumnClassification.IDENTIFIER
-            ]
-        ]
-        
-        if not searchable_fields:
-            return None
-        
         # Build tool definition
         tool_name = f"find_{entity.name}"
-        description = f"Search for {entity.name} records with intelligent filtering"
+        description = f"Search for {entity.name} records with comprehensive filtering options"
         
         parameters = []
         where_conditions = []
         
-        # Add search parameters for each searchable field
-        for field in searchable_fields[:3]:  # Limit to top 3 fields
+        # Add parameters for ALL fields
+        for field in entity.columns:
             param_name = self._to_business_name(field.name)
-            parameters.append({
-                "name": param_name,
-                "type": "string",
-                "description": f"Search by {param_name} (partial match supported)"
-            })
-            
-            where_conditions.append(
-                f"  AND (${param_name} IS NULL OR {field.name} ILIKE '%' || ${param_name} || '%')"
-            )
-        
-        # Add status filter if available
-        status_fields = [
-            col for col in entity.columns
-            if col.classification == ColumnClassification.BUSINESS_STATUS
-        ]
-        
-        if status_fields:
-            field = status_fields[0]
-            param_name = self._to_business_name(field.name)
-            
             param_def = {
                 "name": param_name,
                 "type": "string",
-                "description": f"Filter by {param_name}"
+                "description": f"Filter by {param_name}",
+                "default": None
             }
             
             # Add enum values if available
             if field.enum_values:
                 param_def["enum"] = field.enum_values
             
-            parameters.append(param_def)
-            where_conditions.append(
-                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
+            # Determine filter type based on classification and field name
+            field_lower = field.name.lower()
+            
+            # Check if this should use partial match
+            use_partial_match = (
+                field.classification in [ColumnClassification.DESCRIPTIVE, ColumnClassification.IDENTIFIER] or
+                any(pattern in field_lower for pattern in ['name', 'desc', 'address', 'title', 'text'])
             )
+            
+            if use_partial_match:
+                # Partial match for text fields
+                parameters.append(param_def)
+                where_conditions.append(
+                    f"  AND (${param_name} IS NULL OR {field.name} ILIKE '%' || ${param_name} || '%')"
+                )
+            elif field.classification == ColumnClassification.TEMPORAL:
+                # Add date range parameters
+                param_from = param_def.copy()
+                param_from["name"] = f"{param_name}From"
+                param_from["description"] = f"{param_name} from date (YYYY-MM-DD)"
+                param_from["format"] = "date"
+                parameters.append(param_from)
+                
+                param_to = param_def.copy()
+                param_to["name"] = f"{param_name}To"
+                param_to["description"] = f"{param_name} to date (YYYY-MM-DD)"
+                param_to["format"] = "date"
+                parameters.append(param_to)
+                
+                where_conditions.append(
+                    f"  AND (${param_name}From IS NULL OR {field.name} >= ${param_name}From)"
+                )
+                where_conditions.append(
+                    f"  AND (${param_name}To IS NULL OR {field.name} <= ${param_name}To)"
+                )
+            elif field.classification == ColumnClassification.METRIC:
+                # Add min/max parameters for numeric fields
+                param_min = param_def.copy()
+                param_min["name"] = f"{param_name}Min"
+                param_min["type"] = "number"
+                param_min["description"] = f"Minimum {param_name}"
+                parameters.append(param_min)
+                
+                param_max = param_def.copy()
+                param_max["name"] = f"{param_name}Max"
+                param_max["type"] = "number"
+                param_max["description"] = f"Maximum {param_name}"
+                parameters.append(param_max)
+                
+                where_conditions.append(
+                    f"  AND (${param_name}Min IS NULL OR {field.name} >= ${param_name}Min)"
+                )
+                where_conditions.append(
+                    f"  AND (${param_name}Max IS NULL OR {field.name} <= ${param_name}Max)"
+                )
+            else:
+                # Exact match for other fields
+                parameters.append(param_def)
+                where_conditions.append(
+                    f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
+                )
+        
+        # Add pagination parameters
+        parameters.extend([
+            {
+                "name": "page",
+                "type": "integer",
+                "description": "Page number (1-based)",
+                "default": 1,
+                "minimum": 1
+            },
+            {
+                "name": "page_size",
+                "type": "integer",
+                "description": "Number of records per page",
+                "default": 20,
+                "minimum": 1,
+                "maximum": 1000
+            }
+        ])
         
         # Build SQL query
         sql = f"""
@@ -121,72 +177,8 @@ SELECT *
 FROM {entity.primary_model.name}
 WHERE 1=1
 {chr(10).join(where_conditions)}
-ORDER BY {self._get_default_order_column(entity)}
-LIMIT 100
-        """.strip()
-        
-        # Generate return type with properties at the correct level
-        return_properties = self._generate_return_properties(entity)
-        
-        return {
-            "mxcp": self.version,
-            "tool": {
-                "name": tool_name,
-                "description": description,
-                "parameters": parameters,
-                "return": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": return_properties  # Properties inside items
-                    }
-                },
-                "source": {
-                    "code": sql
-                },
-                "enabled": True
-            }
-        }
-    
-    def _generate_filter_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
-        """Generate a filter tool for status-based queries"""
-        status_fields = [
-            col for col in entity.columns
-            if col.classification == ColumnClassification.BUSINESS_STATUS
-        ]
-        
-        if not status_fields:
-            return None
-        
-        tool_name = f"filter_{entity.name}_by_status"
-        description = f"Filter {entity.name} records by status fields"
-        
-        parameters = []
-        where_conditions = []
-        
-        for field in status_fields:
-            param_name = self._to_business_name(field.name)
-            param_def = {
-                "name": param_name,
-                "type": "boolean" if field.data_type.lower() in ['boolean', 'bool'] else "string",
-                "description": f"Filter by {param_name}"
-            }
-            
-            if field.enum_values:
-                param_def["enum"] = field.enum_values
-            
-            parameters.append(param_def)
-            
-            where_conditions.append(
-                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
-            )
-        
-        sql = f"""
-SELECT *
-FROM {entity.primary_model.name}
-WHERE 1=1
-{chr(10).join(where_conditions)}
-ORDER BY {self._get_default_order_column(entity)}
+ORDER BY {self._get_default_order_column(entity)} DESC
+LIMIT $page_size OFFSET (($page - 1) * $page_size)
         """.strip()
         
         # Generate return type with properties at the correct level
@@ -363,18 +355,30 @@ LIMIT 100
         # Remove common prefixes/suffixes
         name = technical_name.lower()
         
+        # Check if this has a language suffix we should preserve
+        lang_suffix = ""
+        if name.endswith('_en'):
+            lang_suffix = "En"
+            name = name[:-3]
+        elif name.endswith('_ar'):
+            lang_suffix = "Ar"
+            name = name[:-3]
+        
         # Remove entity-specific prefixes
         for prefix in ['bl_', 'dim_', 'fact_']:
             if name.startswith(prefix):
                 name = name[len(prefix):]
         
-        # Remove common suffixes
-        for suffix in ['_en', '_ar', '_id', '_key']:
+        # Remove other common suffixes (but not language ones)
+        for suffix in ['_id', '_key']:
             if name.endswith(suffix):
                 name = name[:-len(suffix)]
         
         # Convert underscores to spaces and capitalize
-        return name.replace('_', ' ').title().replace(' ', '')
+        result = name.replace('_', ' ').title().replace(' ', '')
+        
+        # Add back language suffix if present
+        return result + lang_suffix
     
     def _get_default_order_column(self, entity: BusinessEntity) -> str:
         """Get default column for ordering results"""
@@ -428,4 +432,304 @@ LIMIT 100
         elif any(t in sql_type_lower for t in ['date', 'time', 'timestamp']):
             return "string"  # ISO format
         else:
-            return "string" 
+            return "string"
+    
+    def _generate_aggregation_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
+        """Generate aggregation tool for complex queries"""
+        # Find aggregatable fields
+        categorical_fields = [
+            col for col in entity.columns
+            if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
+        ]
+        
+        metric_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.METRIC
+        ]
+        
+        if not categorical_fields:
+            return None
+        
+        tool_name = f"aggregate_{entity.name}"
+        description = f"Aggregate {entity.name} data by various dimensions"
+        
+        parameters = []
+        
+        # Add group by parameters for each categorical field
+        for field in categorical_fields[:10]:  # Limit to 10 most important
+            param_name = f"groupBy{self._to_business_name(field.name)}"
+            parameters.append({
+                "name": param_name,
+                "type": "boolean",
+                "description": f"Group by {self._to_business_name(field.name)}",
+                "default": False
+            })
+        
+        # Add filters for categorical fields
+        for field in categorical_fields[:5]:  # Top 5 for filtering
+            param_name = f"filter{self._to_business_name(field.name)}"
+            param_def = {
+                "name": param_name,
+                "type": "string",
+                "description": f"Filter by {self._to_business_name(field.name)}",
+                "default": None
+            }
+            if field.enum_values:
+                param_def["enum"] = field.enum_values
+            parameters.append(param_def)
+        
+        # Build dynamic SQL
+        group_by_columns = []
+        select_columns = ["COUNT(*) as total_count", "COUNT(DISTINCT license_pk) as unique_licenses"]
+        where_clauses = []
+        
+        # Add dynamic group by columns based on parameters
+        for field in categorical_fields[:10]:
+            param_name = f"groupBy{self._to_business_name(field.name)}"
+            group_by_columns.append(
+                f"  CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}"
+            )
+            select_columns.insert(0, f"CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}")
+        
+        # Add filters
+        for field in categorical_fields[:5]:
+            param_name = f"filter{self._to_business_name(field.name)}"
+            where_clauses.append(
+                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
+            )
+        
+        # Build the final SQL
+        sql = f"""
+SELECT
+  {',\n  '.join(select_columns)}
+FROM {entity.primary_model.name}
+WHERE 1=1
+{chr(10).join(where_clauses)}
+GROUP BY {', '.join([f"{i+1}" for i in range(len(group_by_columns))])}
+ORDER BY total_count DESC
+LIMIT 100
+        """.strip()
+        
+        return {
+            "mxcp": self.version,
+            "tool": {
+                "name": tool_name,
+                "description": description,
+                "parameters": parameters,
+                "return": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "source": {
+                    "code": sql
+                },
+                "enabled": True
+            }
+        }
+    
+    def _generate_timeseries_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
+        """Generate time series analysis tool"""
+        temporal_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.TEMPORAL
+        ]
+        
+        if not temporal_fields:
+            return None
+        
+        tool_name = f"timeseries_{entity.name}"
+        description = f"Analyze {entity.name} trends over time"
+        
+        parameters = [
+            {
+                "name": "timeField",
+                "type": "string",
+                "description": "Date field to analyze",
+                "enum": [f.name for f in temporal_fields],
+                "default": temporal_fields[0].name if temporal_fields else None
+            },
+            {
+                "name": "granularity",
+                "type": "string",
+                "description": "Time granularity",
+                "enum": ["day", "week", "month", "quarter", "year"],
+                "default": "month"
+            },
+            {
+                "name": "startDate",
+                "type": "string",
+                "format": "date",
+                "description": "Start date (YYYY-MM-DD)",
+                "default": None
+            },
+            {
+                "name": "endDate",
+                "type": "string",
+                "format": "date",
+                "description": "End date (YYYY-MM-DD)",
+                "default": None
+            }
+        ]
+        
+        # Build SQL
+        sql = f"""
+SELECT
+  DATE_TRUNC($granularity, 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
+    END
+  ) as period,
+  COUNT(*) as count,
+  COUNT(DISTINCT license_pk) as unique_licenses
+FROM {entity.primary_model.name}
+WHERE CASE 
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+    ELSE bl_est_date_d
+  END IS NOT NULL
+  AND ($startDate IS NULL OR 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
+    END >= $startDate::DATE)
+  AND ($endDate IS NULL OR 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
+    END <= $endDate::DATE)
+GROUP BY period
+ORDER BY period DESC
+        """.strip()
+        
+        return {
+            "mxcp": self.version,
+            "tool": {
+                "name": tool_name,
+                "description": description,
+                "parameters": parameters,
+                "return": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "period": {"type": "string", "format": "date"},
+                            "count": {"type": "integer"},
+                            "unique_licenses": {"type": "integer"}
+                        }
+                    }
+                },
+                "source": {
+                    "code": sql
+                },
+                "enabled": True
+            }
+        }
+    
+    def _generate_geographic_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
+        """Generate geographic analysis tool"""
+        geo_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.GEOGRAPHIC
+        ]
+        
+        if not geo_fields:
+            return None
+        
+        tool_name = f"geo_{entity.name}"
+        description = f"Analyze {entity.name} by geographic location"
+        
+        # Find the main geographic field (e.g., emirate)
+        main_geo = next((f for f in geo_fields if 'emirate' in f.name.lower()), geo_fields[0])
+        
+        parameters = [
+            {
+                "name": "groupByField",
+                "type": "string",
+                "description": "Geographic field to group by",
+                "enum": [f.name for f in geo_fields],
+                "default": main_geo.name
+            },
+            {
+                "name": "includeCoordinates",
+                "type": "boolean",
+                "description": "Include lat/lon statistics",
+                "default": False
+            }
+        ]
+        
+        sql = f"""
+SELECT
+  CASE 
+    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
+    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
+    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
+    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    ELSE emirate_name_en
+  END as location,
+  COUNT(*) as count,
+  COUNT(DISTINCT license_pk) as unique_licenses,
+  CASE 
+    WHEN $includeCoordinates THEN AVG(CAST(lat_dd AS FLOAT))
+    ELSE NULL
+  END as avg_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN AVG(CAST(lon_dd AS FLOAT))
+    ELSE NULL
+  END as avg_longitude
+FROM {entity.primary_model.name}
+WHERE CASE 
+    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
+    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
+    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
+    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    ELSE emirate_name_en
+  END IS NOT NULL
+GROUP BY location
+ORDER BY count DESC
+        """.strip()
+        
+        return {
+            "mxcp": self.version,
+            "tool": {
+                "name": tool_name,
+                "description": description,
+                "parameters": parameters,
+                "return": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "location": {"type": "string"},
+                            "count": {"type": "integer"},
+                            "unique_licenses": {"type": "integer"},
+                            "avg_latitude": {"type": "number"},
+                            "avg_longitude": {"type": "number"}
+                        }
+                    }
+                },
+                "source": {
+                    "code": sql
+                },
+                "enabled": True
+            }
+        }
+    
+    def _has_temporal_fields(self, entity: BusinessEntity) -> bool:
+        """Check if entity has temporal fields"""
+        return any(
+            col.classification == ColumnClassification.TEMPORAL
+            for col in entity.columns
+        )
+    
+    def _has_geographic_fields(self, entity: BusinessEntity) -> bool:
+        """Check if entity has geographic fields"""
+        return any(
+            col.classification == ColumnClassification.GEOGRAPHIC
+            for col in entity.columns
+        ) 

@@ -1,123 +1,61 @@
 mxcp: 1.0.0
 tool:
-  name: "timeseries_licenses"
-  description: "Aggregate UAE business licenses by time (establishment or expiry), with deep filtering and flexible interval."
-  tags: ["timeseries", "licenses", "uae", "deep-filters"]
-  annotations:
-    title: "Timeseries Licenses"
-    readOnlyHint: true
-    destructiveHint: false
-    idempotentHint: true
-    openWorldHint: false
+  name: timeseries_licenses
+  description: Analyze licenses trends over time
   parameters:
-    - { name: "date_field", type: "string", description: "Which date to aggregate by (bl_est_date_d or bl_exp_date_d)", default: "bl_est_date_d", examples: ["bl_est_date_d", "bl_exp_date_d"] }
-    - { name: "interval", type: "string", description: "Time bucket size: day, month, year", default: "month", examples: ["day", "month", "year"] }
-    - { name: "metrics", type: "string", description: "Comma-separated list of metrics: count,distinct_count", default: "count", examples: ["count,distinct_count"] }
-    - name: "emirate_name_en"
-      type: "string"
-      description: "Emirate (EN) exact match"
-      default: null
-      examples:
-        - 'Dubai'
-        - 'Abu Dhabi'
-        - 'Sharjah'
-        - 'Ajman'
-        - 'Ras Al Khaimah'
-        - 'Fujairah'
-        - 'Umm Al Quwain'
-        - 'Umm Al-Quwain'
-    - { name: "emirate_name_en_like", type: "string", description: "Emirate (EN) substring match", default: null }
-    - { name: "emirate_name_ar", type: "string", description: "Emirate (AR) exact match", default: null }
-    - { name: "emirate_name_ar_like", type: "string", description: "Emirate (AR) substring match", default: null }
-    - { name: "issuance_authority_en", type: "string", description: "Issuance authority (EN) exact match", default: null }
-    - { name: "issuance_authority_en_like", type: "string", description: "Issuance authority (EN) substring match", default: null }
-    - { name: "issuance_authority_ar", type: "string", description: "Issuance authority (AR) exact match", default: null }
-    - { name: "issuance_authority_ar_like", type: "string", description: "Issuance authority (AR) substring match", default: null }
-    - { name: "bl", type: "string", description: "License number exact match", default: null }
-    - { name: "bl_like", type: "string", description: "License number substring match", default: null }
-    - { name: "bl_status_en", type: "string", description: "License status (EN)", default: null }
-    - name: "bl_type_en"
-      type: "string"
-      description: "License type (EN)"
-      default: null
-      examples:
-        - 'Agrecultural & Animals'
-        - 'Business Invest License'
-        - 'Commercial'
-        - "E'dmad  (Reliance)"
-        - 'E-Commerce License'
-        - 'Educational License'
-        - 'Event   License'
-        - 'Handicraft'
-        - 'Industrial'
-        - 'International Business Companies'
-        - 'Media License'
-        - 'Preliminary License'
-        - 'Professional'
-        - 'Service'
-        - 'Service License'
-        - 'Standard'
-        - 'Trade'
-        - 'tourism license'
-    - { name: "bl_legal_type_en", type: "string", description: "Legal type (EN)", default: null }
-    - { name: "owner_nationality_en", type: "string", description: "Owner nationality (EN)", default: null }
-    - name: "relationship_type_en"
-      type: "string"
-      description: "Relationship type (EN)"
-      default: null
-      examples:
-          - 'Authorized signatory'
-          - 'Chairman of the Board of Directors'
-          - 'Cheif Executive'
-          - 'Designated Member'
-          - 'Doctor'
-          - 'Founder'
-          - 'Leased-Rented'
-          - 'Owner'
-          - 'Partner'
-          - 'Pharmacist'
-          - 'Representative of the Board'
-          - 'Representative of the Successors '
-          - 'Secretary'
-          - 'Service Agent'
-          - 'Shareholders of the Company'
-          - 'Successors'
-          - 'The Board of Directors, Member and CEO/Executive Director'
-    - { name: "bl_est_date_d_from", type: "string", description: "Establishment date from (YYYY-MM-DD)", default: null }
-    - { name: "bl_est_date_d_to", type: "string", description: "Establishment date to (YYYY-MM-DD)", default: null }
-    - { name: "bl_exp_date_d_from", type: "string", description: "Expiry date from (YYYY-MM-DD)", default: null }
-    - { name: "bl_exp_date_d_to", type: "string", description: "Expiry date to (YYYY-MM-DD)", default: null }
-    - { name: "page_size", type: "integer", description: "Number of records per page", default: 20, minimum: 1, maximum: 1000 }
-    - { name: "page", type: "integer", description: "Page number (1-based)", default: 1, minimum: 1 }
+  - name: timeField
+    type: string
+    description: Date field to analyze
+    enum:
+    - bl_est_date
+    - bl_exp_date
+    - bl_est_date_d
+    - bl_exp_date_d
+    default: bl_est_date
+  - name: granularity
+    type: string
+    description: Time granularity
+    enum:
+    - day
+    - week
+    - month
+    - quarter
+    - year
+    default: month
+  - name: startDate
+    type: string
+    format: date
+    description: Start date (YYYY-MM-DD)
+    default: null
+  - name: endDate
+    type: string
+    format: date
+    description: End date (YYYY-MM-DD)
+    default: null
   return:
     type: array
     items:
       type: object
       properties:
-        period: { type: string }
-        count: { type: integer }
-        distinct_count: { type: integer }
+        period:
+          type: string
+          format: date
+        count:
+          type: integer
+        unique_licenses:
+          type: integer
   source:
-    file: "timeseries_licenses.sql"
-  enabled: false
-  policies:
-    input:
-      - condition: >-
-          user.role == 'guest' && (
-            owner_nationality_en != null ||
-            bl_name_en != null ||
-            bl_cbls != null ||
-            business_activity_code != null ||
-            relationship_type_en != null ||
-            parent_licence_license_number != null ||
-            parent_license_issuance_authority_en != null
-          )
-        action: deny
-        reason: "Guest users cannot filter by sensitive information"
-  # tests:
-  #   - name: "basic"
-  #     arguments:
-  #       - { key: "interval", value: "month" }
-  #       - { key: "emirate_name_en", value: "Dubai" }
-  #       - { key: "page_size", value: 1 }
-  #     result: ">= 1 row"
+    code: "SELECT\n  DATE_TRUNC($granularity, \n    CASE \n      WHEN $timeField =\
+      \ 'bl_est_date_d' THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d'\
+      \ THEN bl_exp_date_d\n      ELSE bl_est_date_d\n    END\n  ) as period,\n  COUNT(*)\
+      \ as count,\n  COUNT(DISTINCT license_pk) as unique_licenses\nFROM dim_licenses\n\
+      WHERE CASE \n    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d\n    WHEN\
+      \ $timeField = 'bl_exp_date_d' THEN bl_exp_date_d\n    ELSE bl_est_date_d\n\
+      \  END IS NOT NULL\n  AND ($startDate IS NULL OR \n    CASE \n      WHEN $timeField\
+      \ = 'bl_est_date_d' THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d'\
+      \ THEN bl_exp_date_d\n      ELSE bl_est_date_d\n    END >= $startDate::DATE)\n\
+      \  AND ($endDate IS NULL OR \n    CASE \n      WHEN $timeField = 'bl_est_date_d'\
+      \ THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d\n\
+      \      ELSE bl_est_date_d\n    END <= $endDate::DATE)\nGROUP BY period\nORDER\
+      \ BY period DESC"
+  enabled: true
