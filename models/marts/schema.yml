@@ -25,6 +25,10 @@ models:
         tests:
           - not_null
 
+      - name: bl_cbls
+        description: "The BL CBLS number."
+        data_type: varchar
+
       - name: emirate_name_en
         description: "The English name of the Emirate where the license is registered."
         data_type: varchar

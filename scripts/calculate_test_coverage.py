@@ -36,8 +36,9 @@ def calculate_coverage(manifest_path: Path):
         if node["resource_type"] == "test":
             for dep_name in node["depends_on"]["nodes"]:
                 if dep_name.startswith("model."):
-                    # Extract model short name
-                    model_short_name = dep_name.split(".")[-1]
+                    # Extract model short name - handle versioned models
+                    parts = dep_name.split(".")
+                    model_short_name = parts[-2] if parts[-1].startswith("v") and parts[-1][1:].isdigit() else parts[-1]
                     # Check if this is a column-level test
                     test_meta = node.get("test_metadata")
                     if test_meta and "column_name" in test_meta.get("kwargs", {}):
