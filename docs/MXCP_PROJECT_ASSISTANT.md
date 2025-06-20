@@ -23,7 +23,7 @@ This protocol is **non-negotiable**. Before proposing *any* change to a protecte
 | 3    | **Run Pre-Change Tests** | Confirm all existing tests pass.                                                                                                                    |
 | 4    | **Propose Change**     | Use the `edit_file` or `create_file` tool to make the change.                                                                                       |
 | 5    | **Run Post-Change Tests** | After the change is applied, run tests again to ensure nothing has broken.                                                                        |
-| 6    | **Verify Coverage**    | **If a dbt model in `models/marts/` was changed**, run the coverage script and ensure column coverage is at least 80%. |
+| 6    | **Verify Coverage**    | **If a dbt model in `models/marts/` was changed**, run the coverage script and ensure column coverage is at least 90%. |
 | 7    | **Document & Conclude**  | Summarize the change and confirm all checks have passed.                                                                                            |
 
 **Protected Resources:**
@@ -54,7 +54,7 @@ The project follows a standard `staging` -> `marts` structure.
 - **`models/marts/`**: Final, user-facing models (dimensions and facts). This is where business logic, joins, and transformations occur.
 
 ### Test Coverage Requirements
-- **Marts Layer**: All models in the `marts` layer **must** have a minimum of **80% column-level test coverage**.
+- **Marts Layer**: All models in the `marts` layer **must** have a minimum of **90% column-level test coverage**.
 - **Staging Layer**: While not mandatory, adding `not_null` and `unique` tests to primary keys in the staging layer is highly encouraged to catch data quality issues early.
 - **Verification**: Use the `scripts/calculate_test_coverage.py` script to verify coverage.
 

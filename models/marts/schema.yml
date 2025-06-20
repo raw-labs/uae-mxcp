@@ -78,9 +78,36 @@ models:
 
       - name: parent_license_issuance_authority_en
         description: "The English name of the parent license's issuing authority."
+        tests:
+          - accepted_values:
+              values: [
+                'ADGM',
+                'Abu Dhabi Department of Economic Development',
+                'DMCC',
+                'Department of Economic Development',
+                'Dubai Silicon Oasis Authority',
+                'Dubai South',
+                'KEZAD',
+                'Municipality',
+                'Sharjah Economic Development Department',
+                'Sharjah Publishing City'
+              ]
 
       - name: parent_license_issuance_authority_ar
         description: "The Arabic name of the parent license's issuing authority."
+        tests:
+          - accepted_values:
+              values: [
+                'بلدية',
+                'دائرة التنمية الاقتصادية',
+                'دائرة التنمية الاقتصادية في أبوظبي',
+                'دائرة التنمية الاقتصادية في الشارقة',
+                'دبي الجنوب',
+                'سلطة واحة دبي للسيليكون',
+                'سوق أبوظبي العالمي',
+                'مجموعة كيزاد',
+                'مركز دبي للسلع المتعددة'
+              ]
 
       - name: relationship_type_en
         description: "The relationship type of the owner to the license (e.g., Owner, Partner)."
