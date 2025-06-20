@@ -1,125 +1,97 @@
 # MXCP Project Assistant Guide
 
-## 1. Core Purpose
+## 1. Core Purpose & AI Directives
 
 This document contains the rules and guidelines for the AI assistant operating within this **MXCP (RAW Labs) project**. The presence of an `mxcp-site.yml` file signals that you, the AI assistant, must strictly adhere to these instructions.
 
 Your primary purpose is to help:
-1.  **Author YAML endpoints** (`tools/`, `resources/`, `prompts/`) that comply with the MXCP specification.
+1.  **Author YAML endpoints** (`tools/`, `resources/`, `prompts/`).
 2.  **Write and manage the underlying logic** (e.g., DuckDB SQL) for each endpoint.
 3.  **List, validate, and test** all endpoints using the `mxcp` CLI.
 4.  **Operate the project** safely via the `mxcp` CLI (`init`, `serve`, `test`, etc.).
 
 ---
 
-## 2. Project Safety Rules & Protocols
+## 2. The AI Change Protocol (AICP)
 
-These rules are **non-negotiable**. They ensure safe, consistent, and testable changes to the project.
+This protocol is **non-negotiable**. Before proposing *any* change to a protected resource, you **must** follow these steps in order:
 
-### Project-Specific Design Principles
+| Step | Action                 | Command / Verification                                                                                                                              |
+| :--- | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **State Intent**       | Clearly describe the change you intend to make.                                                                                                     |
+| 2    | **Verify Git Status**  | Confirm the git working directory is clean.                                                                                                         |
+| 3    | **Run Pre-Change Tests** | Confirm all existing tests pass.                                                                                                                    |
+| 4    | **Propose Change**     | Use the `edit_file` or `create_file` tool to make the change.                                                                                       |
+| 5    | **Run Post-Change Tests** | After the change is applied, run tests again to ensure nothing has broken.                                                                        |
+| 6    | **Verify Coverage**    | **If a dbt model in `models/marts/` was changed**, run the coverage script and ensure column coverage is at least 90%. |
+| 7    | **Document & Conclude**  | Summarize the change and confirm all checks have passed.                                                                                            |
 
-This project adheres to two additional core principles:
-
-1.  **Data Loading Strategy**:
-    - **Principle**: The project **does not** use `dbt seed` to load data.
-    - **Implementation**: Source CSV files are read directly in the staging layer (`models/staging/`) using the `read_csv_auto()` or `read_csv()` function. The file path must be passed as a dbt variable (e.g., `licenses_file`).
-
-2.  **Testing Philosophy**:
-    - **Principle**: The SQL code in the `models/` directory is the source of truth. Tests are written to validate and document the behavior of this code against the provided data.
-    - **Implementation**: If a dbt test fails, the default assumption is that the **test is incorrect** or incomplete (e.g., a list of `accepted_values` is missing a new value). The underlying SQL code should **not** be changed to make a test pass.
-
-### Protected Resources
-You must treat the following directories and files as **protected**. Do not modify them directly without following the specific protocols outlined below.
+**Protected Resources:**
 - **dbt Layer**: `models/`, `seeds/`, `tests/`, `macros/`, `dbt_project.yml`
 - **MXCP Layer**: `tools/`, `resources/`, `prompts/`, `mxcp-site.yml`
 
-### AI Change Protocol (AICP)
-Before proposing any change, you **must** follow this protocol:
+---
 
-1.  **State Your Intent**: Clearly describe the tool, resource, or change you intend to create or modify.
-2.  **Verify Pre-conditions**:
-    - Confirm the git status is clean (`git status`).
-    - Confirm all tests pass (`mxcp test`).
-3.  **Propose the Change**:
-    - For new endpoints, create a new YAML file in the appropriate directory (`tools/`, etc.).
-    - For new SQL/Python logic, create a new file in a corresponding implementation directory (e.g., `sql/`).
-    - The new endpoint YAML **must** include at least one test case.
-4.  **Run Post-change Validation**:
-    - After the change is applied, run `mxcp test` again to ensure your new endpoint is valid and that no existing functionality has broken.
-5.  **Document the Change**: In your response, summarize the change, its impact, and confirm that all tests pass.
+## 3. Project-Specific Principles
+
+This project has two core philosophies that you must follow:
+
+### Data Loading Strategy
+- **Principle**: The project **does not** use `dbt seed` to load data.
+- **Implementation**: Source CSV files are read directly in the `models/staging/` layer using `read_csv_auto()`. The file path must always be passed as a dbt variable (e.g., `licenses_file`).
+
+### Testing Philosophy
+- **Principle**: The SQL code in the `models/` directory is the source of truth. Tests are written to validate and document the behavior of this code.
+- **Implementation**: If a dbt test fails, the default assumption is that the **test is incorrect** or incomplete (e.g., `accepted_values` is missing a new value). The underlying SQL code should **not** be changed to make a test pass.
 
 ---
 
-## 3. Endpoint YAML Reference
+## 4. dbt & Testing Conventions
 
-### Common Header
-All endpoint files must start with this header:
-```yaml
-mxcp: "1.0.0"        # Required schema version
-# Followed by exactly one of: tool / resource / prompt
-```
+### Model Layers
+The project follows a standard `staging` -> `marts` structure.
+- **`models/staging/`**: Reads directly from source CSVs. Light cleaning and renaming.
+- **`models/marts/`**: Final, user-facing models (dimensions and facts). This is where business logic, joins, and transformations occur.
 
-### Tool Example
+### Test Coverage Requirements
+- **Marts Layer**: All models in the `marts` layer **must** have a minimum of **90% column-level test coverage**.
+- **Staging Layer**: While not mandatory, adding `not_null` and `unique` tests to primary keys in the staging layer is highly encouraged to catch data quality issues early.
+- **Verification**: Use the `scripts/calculate_test_coverage.py` script to verify coverage.
+
+---
+
+## 5. MXCP Endpoint & CLI Reference
+
+### Tool YAML Example
+All endpoint files must start with `mxcp: "1.0.0"`.
+
 ```yaml
-# File: tools/search-licenses.yml
+# File: tools/search_licenses.yml
 mxcp: "1.0.0"
 tool:
-  name: "search_licenses"              # Unique, snake_case or kebab-case
-  description: "Finds business licenses by name or activity" # One-sentence summary
+  name: "search_licenses"
+  description: "Finds business licenses by name or activity"
   parameters:
     - name: "name"
       type: "string"
       description: "The business name to search for"
-      examples: ["Al Futtaim"]
-  # The return schema defines the shape of the output.
-  # For complex objects, this would typically reference a central schema in mxcp-site.yml.
   return:
     type: "array"
     items:
       type: "object"
-      properties:
-        license_pk: { type: "string" }
+      properties: # Simplified for example
         bl_name_en: { type: "string" }
-  # The source can be an external file (best practice) or inline code.
   source:
     file: "sql/search_licenses.sql"
   enabled: true
-  # Every tool MUST have at least one test.
   tests:
     - name: "test_basic_search"
-      description: "Ensures a known business can be found"
-      arguments: [{ key: "name", value: "Al Futtaim" }]
+      arguments: [{ key: "name", value: "Futtaim" }]
       result: ">= 1 row" # Asserts at least one row is returned
-  # Policies provide fine-grained access control.
-  policies:
-    input:
-      - condition: "user.role == 'guest'"
-        action: deny
-        reason: "Guests cannot use this tool."
 ```
 
----
-
-## 4. CLI Quick Reference
-
-Use the `mxcp` command-line tool to manage the project.
-
-- `mxcp test`: Run all endpoint tests.
-- `mxcp serve`: Start the local MCP server for manual testing.
-- `mxcp drift-detect`: Detect schema or behavioral drift over time.
-
----
-
-## 5. Validation Checklist for the AI
-
-Before committing a change, ensure it meets these criteria:
-
-| Check                | Rule                                                                |
-| -------------------- | ------------------------------------------------------------------- |
-| **Schema Compliant** | YAML is valid and contains exactly one of `tool`, `resource`, or `prompt`. |
-| **Unique Name**      | The endpoint `name` is unique within the project.                   |
-| **Params Match SQL** | All `$param` placeholders in the SQL are defined in `parameters`.   |
-| **Return Defined**   | The `return` schema is clearly defined.                             |
-| **Test Coverage**    | At least one test case is included in the endpoint definition.      |
-| **Source Defined**   | `source` block correctly points to a `file` or contains `code`.     |
-| **Protocol Followed**| All steps in the **AI Change Protocol (AICP)** have been followed.  |
+### Common CLI Commands
+- `mxcp test`: Run all endpoint tests defined in the YAML files.
+- `dbt test`: Run all dbt data tests defined in `schema.yml` files.
+- `dbt docs generate`: Generate dbt documentation and the `manifest.json` file needed for coverage calculation.
+- `python3 scripts/calculate_test_coverage.py`: Calculate test coverage for dbt models.

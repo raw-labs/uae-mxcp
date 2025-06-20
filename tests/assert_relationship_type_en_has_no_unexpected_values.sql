@@ -2,7 +2,7 @@
 -- It will return rows for any value that is not in the hardcoded list, causing the test to fail.
 
 WITH all_values AS (
-    SELECT DISTINCT relationship_type_en FROM {{ ref('dim_licenses') }}
+    SELECT DISTINCT relationship_type_en FROM {{ ref('dim_licenses', version='1') }}
 )
 SELECT av.relationship_type_en
 FROM all_values av
@@ -12,7 +12,7 @@ LEFT JOIN (
         ('Chairman of the Board of Directors'),
         ('Cheif Executive'),
         ('Designated Member'),
-        ('Designated Member'),
+        ('Designated Member'),
         ('Doctor'),
         ('Founder'),
         ('Leased-Rented'),

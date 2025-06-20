@@ -108,6 +108,39 @@ The project is designed to work with any compatible CSV file.
 > 1.  **Schema Tests:** Defined in `.yml` files (e.g., `not_null`).
 > 2.  **Custom Data Tests:** Custom SQL queries in the `tests/` directory that check for complex business rules. `dbt test` runs both types automatically.
 
+### dbt Model Versioning and Contracts
+
+**Model Versioning:**
+- All dbt models in this project are versioned using the `version:` key in their `schema.yml` definition (e.g., `version: 1`).
+- When a breaking change is needed, a new version (e.g., `version: 2`) should be created, and the old version can be maintained for backward compatibility.
+- Version tags (e.g., `tags: [marts, v1]`) are also used for discoverability and automation.
+
+**Model Contracts:**
+- Contracts are enabled for all marts models (e.g., `dim_licenses`) using `contract={"enforced": True}` in the model's config block.
+- Contracts ensure that the model's output matches the schema defined in `schema.yml` (column names, types, and nullability).
+- If the model output does not match the contract, dbt will raise an error during `dbt run` or `dbt build`.
+- **Contracts are NOT enforced in staging models** to allow for more flexibility during data ingestion and transformation.
+
+**Example:**
+```yaml
+# models/marts/schema.yml
+models:
+  - name: dim_licenses
+    version: 1
+    tags: [marts, v1]
+    columns:
+      - name: license_pk
+        data_type: string
+        description: "The unique primary key for each license."
+        tests: [not_null]
+      # ...
+```
+```jinja
+-- models/marts/dim_licenses.sql
+{{ config(materialized='table', tags=['marts', 'v1'], contract={"enforced": True}) }}
+SELECT ...
+```
+
 ---
 
 ## Project Structure and Key Files

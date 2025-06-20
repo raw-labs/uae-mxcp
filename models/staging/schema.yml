@@ -1,8 +1,18 @@
 version: 2
 models:
   - name: src_licenses
+    latest_version: 1
+    config:
+      owner: "RAW"
+    versions:
+      - v: 1
     tags: [staging]
   - name: stg_licenses_raw
+    latest_version: 1
+    config:
+      owner: "RAW"
+    versions:
+      - v: 1
     tags: [staging]
     # No tests are needed here as the mart layer handles data quality.
     columns: []

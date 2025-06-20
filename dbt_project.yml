@@ -18,3 +18,19 @@ target-path: target
 test-paths:
 - tests
 version: 1.0.0
+
+models:
+  uaeme_licenses:
+    staging:
+      materialized: view
+      owner: "pavlos"
+    marts:
+      materialized: table
+      owner: "pavlos"
+
+tests:
+  uaeme_licenses:
+    assert_bl_legal_type_en_has_no_unexpected_values:
+      enabled: false
+    assert_relationship_type_en_has_no_unexpected_values:
+      enabled: false
