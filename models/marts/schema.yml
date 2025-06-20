@@ -53,12 +53,19 @@ models:
 
       - name: bl_legal_type_ar
         description: "The legal type of the business license in Arabic."
+        tests:
+          - not_null
 
       - name: bl_type_en
         description: "The type of business license in English (e.g., Commercial, Professional)."
+        tests:
+          - not_null
+          - assert_bl_type_en_accepted_values
 
       - name: bl_type_ar
         description: "The type of business license in Arabic."
+        tests:
+          - not_null
 
       - name: license_branch_flag
         description: "A flag indicating if the license is for a branch ('Y' or 'N'). Can be NULL."
@@ -82,6 +89,8 @@ models:
 
       - name: owner_nationality_ar
         description: "The nationality of the owner in Arabic."
+        tests:
+          - not_null
 
       - name: owner_gender
         description: "The gender of the owner."
@@ -92,6 +101,10 @@ models:
 
       - name: owner_nationality_en
         description: "The nationality of the owner in English."
+        tests:
+          - not_null
 
       - name: business_activity_code
         description: "The code for the business activity."
+        tests:
+          - not_null
