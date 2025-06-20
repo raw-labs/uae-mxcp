@@ -174,7 +174,7 @@ class ToolGenerator:
         # Build SQL query
         sql = f"""
 SELECT *
-FROM {entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
 WHERE 1=1
 {chr(10).join(where_conditions)}
 ORDER BY {self._get_default_order_column(entity)} DESC
@@ -268,7 +268,7 @@ LIMIT $page_size OFFSET (($page - 1) * $page_size)
 SELECT
   COUNT(*) as record_count,
 {','.join(metric_aggregations)}
-FROM {entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
         """.strip()
         
         return {
@@ -305,8 +305,8 @@ FROM {entity.primary_model.name}
 SELECT 
   a.*,
   b.* EXCLUDE ({', '.join([col for _, col in rel_info.join_keys])})
-FROM {entity.primary_model.name} a
-LEFT JOIN dim_{rel_info.to_entity} b
+FROM {entity.primary_model.name}_v1 a
+LEFT JOIN dim_{rel_info.to_entity}_v1 b
   ON {' AND '.join(join_conditions)}
 WHERE 1=1
   AND ($id IS NULL OR a.{self._get_primary_key(entity)} = $id)
@@ -579,7 +579,7 @@ LIMIT 100
         sql = f"""
 SELECT
   {',\n  '.join(select_columns)}
-FROM {entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
 WHERE 1=1
 {chr(10).join(where_clauses)}
 GROUP BY {', '.join([f"{i+1}" for i in range(len(all_groupable_fields))])}
@@ -668,7 +668,7 @@ SELECT
   ) as period,
   COUNT(*) as count,
   COUNT(DISTINCT license_pk) as unique_licenses
-FROM {entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
 WHERE CASE 
     WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
     WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
@@ -812,7 +812,7 @@ SELECT
     WHEN $includeCoordinates THEN MAX({lon_field})
     ELSE NULL
   END as max_longitude
-FROM {entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
 WHERE CASE 
     WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
     WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar

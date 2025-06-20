@@ -258,7 +258,7 @@ tool:
           type: string
           description: A flag indicating if the license is for a branch ('Y' or 'N').
   source:
-    code: "SELECT *\nFROM dim_licenses\nWHERE 1=1\n  AND ($LicensePk IS NULL OR license_pk\
+    code: "SELECT *\nFROM dim_licenses_v1\nWHERE 1=1\n  AND ($LicensePk IS NULL OR license_pk\
       \ = $LicensePk)\n  AND ($Bl IS NULL OR bl = $Bl)\n  AND ($Cbls IS NULL OR bl_cbls\
       \ = $Cbls)\n  AND ($EmirateNameEn IS NULL OR emirate_name_en ILIKE '%' || $EmirateNameEn\
       \ || '%')\n  AND ($EmirateNameAr IS NULL OR emirate_name_ar ILIKE '%' || $EmirateNameAr\
