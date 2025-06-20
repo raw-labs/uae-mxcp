@@ -25,36 +25,9 @@ tool:
         type: number
       maxLon:
         type: number
-  - name: filterLicensePk
+  - name: filterLicenseBranchFlag
     type: string
-    description: Filter by LicensePk
-  - name: filterBl
-    type: string
-    description: Filter by Bl
-  - name: filterCbls
-    type: string
-    description: Filter by Cbls
-  - name: filterEmirateNameEn
-    type: string
-    description: Filter by EmirateNameEn
-  - name: filterEmirateNameAr
-    type: string
-    description: Filter by EmirateNameAr
-  - name: filterIssuanceAuthorityEn
-    type: string
-    description: Filter by IssuanceAuthorityEn
-  - name: filterIssuanceAuthorityAr
-    type: string
-    description: Filter by IssuanceAuthorityAr
-  - name: filterIssuanceAuthorityBranchEn
-    type: string
-    description: Filter by IssuanceAuthorityBranchEn
-  - name: filterIssuanceAuthorityBranchAr
-    type: string
-    description: Filter by IssuanceAuthorityBranchAr
-  - name: filterStatusEn
-    type: string
-    description: Filter by StatusEn
+    description: Filter by LicenseBranchFlag
   - name: EstDateFrom
     type: string
     format: date
@@ -113,17 +86,8 @@ tool:
       \ = 'emirate_name_ar' THEN emirate_name_ar\n    WHEN $groupByField = 'issuance_authority_en'\
       \ THEN issuance_authority_en\n    WHEN $groupByField = 'issuance_authority_ar'\
       \ THEN issuance_authority_ar\n    WHEN $groupByField = 'bl_full_address' THEN\
-      \ bl_full_address\n    ELSE emirate_name_en\n  END IS NOT NULL\n  AND ($filterLicensePk\
-      \ IS NULL OR license_pk = $filterLicensePk)\n  AND ($filterBl IS NULL OR bl\
-      \ = $filterBl)\n  AND ($filterCbls IS NULL OR bl_cbls = $filterCbls)\n  AND\
-      \ ($filterEmirateNameEn IS NULL OR emirate_name_en = $filterEmirateNameEn)\n\
-      \  AND ($filterEmirateNameAr IS NULL OR emirate_name_ar = $filterEmirateNameAr)\n\
-      \  AND ($filterIssuanceAuthorityEn IS NULL OR issuance_authority_en = $filterIssuanceAuthorityEn)\n\
-      \  AND ($filterIssuanceAuthorityAr IS NULL OR issuance_authority_ar = $filterIssuanceAuthorityAr)\n\
-      \  AND ($filterIssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en\
-      \ = $filterIssuanceAuthorityBranchEn)\n  AND ($filterIssuanceAuthorityBranchAr\
-      \ IS NULL OR issuance_authority_branch_ar = $filterIssuanceAuthorityBranchAr)\n\
-      \  AND ($filterStatusEn IS NULL OR bl_status_en = $filterStatusEn)\n  AND ($EstDateFrom\
+      \ bl_full_address\n    ELSE emirate_name_en\n  END IS NOT NULL\n  AND ($filterLicenseBranchFlag\
+      \ IS NULL OR license_branch_flag = $filterLicenseBranchFlag)\n  AND ($EstDateFrom\
       \ IS NULL OR bl_est_date_d >= $EstDateFrom::DATE)\n  AND ($EstDateTo IS NULL\
       \ OR bl_est_date_d <= $EstDateTo::DATE)\n  AND ($ExpDateFrom IS NULL OR bl_exp_date_d\
       \ >= $ExpDateFrom::DATE)\n  AND ($ExpDateTo IS NULL OR bl_exp_date_d <= $ExpDateTo::DATE)\n\

@@ -1,0 +1,313 @@
+mxcp: 1.0.0
+tool:
+  name: find_licenses
+  description: Search for licenses records with comprehensive filtering options
+  parameters:
+  - name: LicensePk
+    type: string
+    description: Filter by LicensePk
+    default: null
+  - name: Bl
+    type: string
+    description: Filter by Bl
+    default: null
+  - name: Cbls
+    type: string
+    description: Filter by Cbls
+    default: null
+  - name: EmirateNameEn
+    type: string
+    description: Filter by EmirateNameEn
+    default: null
+  - name: EmirateNameAr
+    type: string
+    description: Filter by EmirateNameAr
+    default: null
+  - name: IssuanceAuthorityEn
+    type: string
+    description: Filter by IssuanceAuthorityEn
+    default: null
+  - name: IssuanceAuthorityAr
+    type: string
+    description: Filter by IssuanceAuthorityAr
+    default: null
+  - name: IssuanceAuthorityBranchEn
+    type: string
+    description: Filter by IssuanceAuthorityBranchEn
+    default: null
+  - name: IssuanceAuthorityBranchAr
+    type: string
+    description: Filter by IssuanceAuthorityBranchAr
+    default: null
+  - name: StatusEn
+    type: string
+    description: Filter by StatusEn
+    default: null
+  - name: StatusAr
+    type: string
+    description: Filter by StatusAr
+    default: null
+  - name: NameEn
+    type: string
+    description: Filter by NameEn
+    default: null
+  - name: NameAr
+    type: string
+    description: Filter by NameAr
+    default: null
+  - name: LegalTypeEn
+    type: string
+    description: Filter by LegalTypeEn
+    default: null
+  - name: LegalTypeAr
+    type: string
+    description: Filter by LegalTypeAr
+    default: null
+  - name: EstDateFrom
+    type: string
+    description: EstDate from date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: EstDateTo
+    type: string
+    description: EstDate to date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: ExpDateFrom
+    type: string
+    description: ExpDate from date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: ExpDateTo
+    type: string
+    description: ExpDate to date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: TypeEn
+    type: string
+    description: Filter by TypeEn
+    default: null
+  - name: TypeAr
+    type: string
+    description: Filter by TypeAr
+    default: null
+  - name: LicenseBranchFlag
+    type: string
+    description: Filter by LicenseBranchFlag
+    default: null
+  - name: FullAddress
+    type: string
+    description: Filter by FullAddress
+    default: null
+  - name: ParentLicenceLicenseNumber
+    type: string
+    description: Filter by ParentLicenceLicenseNumber
+    default: null
+  - name: ParentLicenseIssuanceAuthorityEn
+    type: string
+    description: Filter by ParentLicenseIssuanceAuthorityEn
+    default: null
+  - name: ParentLicenseIssuanceAuthorityAr
+    type: string
+    description: Filter by ParentLicenseIssuanceAuthorityAr
+    default: null
+  - name: RelationshipTypeEn
+    type: string
+    description: Filter by RelationshipTypeEn
+    default: null
+  - name: RelationshipTypeAr
+    type: string
+    description: Filter by RelationshipTypeAr
+    default: null
+  - name: OwnerNationalityAr
+    type: string
+    description: Filter by OwnerNationalityAr
+    default: null
+  - name: OwnerGender
+    type: string
+    description: Filter by OwnerGender
+    default: null
+  - name: OwnerNationalityEn
+    type: string
+    description: Filter by OwnerNationalityEn
+    default: null
+  - name: BusinessActivityCode
+    type: string
+    description: Filter by BusinessActivityCode
+    default: null
+  - name: BusinessActivityDescEn
+    type: string
+    description: Filter by BusinessActivityDescEn
+    default: null
+  - name: BusinessActivityDescAr
+    type: string
+    description: Filter by BusinessActivityDescAr
+    default: null
+  - name: LicenseLatitude
+    type: string
+    description: Filter by LicenseLatitude
+    default: null
+  - name: LicenseLongitude
+    type: string
+    description: Filter by LicenseLongitude
+    default: null
+  - name: LicenseLatitude1
+    type: string
+    description: Filter by LicenseLatitude1
+    default: null
+  - name: LicenseLongitude1
+    type: string
+    description: Filter by LicenseLongitude1
+    default: null
+  - name: EstDateDFrom
+    type: string
+    description: EstDateD from date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: EstDateDTo
+    type: string
+    description: EstDateD to date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: ExpDateDFrom
+    type: string
+    description: ExpDateD from date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: ExpDateDTo
+    type: string
+    description: ExpDateD to date (YYYY-MM-DD)
+    default: null
+    format: date
+  - name: LatDd
+    type: string
+    description: Filter by LatDd
+    default: null
+  - name: LonDd
+    type: string
+    description: Filter by LonDd
+    default: null
+  - name: page
+    type: integer
+    description: Page number (1-based)
+    default: 1
+    minimum: 1
+  - name: page_size
+    type: integer
+    description: Number of records per page
+    default: 20
+    minimum: 1
+    maximum: 1000
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        license_pk:
+          type: string
+          description: The unique primary key for each license, generated as a hash
+            of authority and license number.
+        bl:
+          type: string
+          description: 'The official business license number (BL #).'
+        bl_cbls:
+          type: string
+          description: The BL CBLS number.
+        emirate_name_en:
+          type: string
+          description: The English name of the Emirate where the license is registered.
+        emirate_name_ar:
+          type: string
+          description: The Arabic name of the Emirate where the license is registered.
+        issuance_authority_en:
+          type: string
+          description: The English name of the license issuing authority.
+        issuance_authority_ar:
+          type: string
+          description: The Arabic name of the license issuing authority.
+        issuance_authority_branch_en:
+          type: string
+          description: The English name of the issuing authority's branch.
+        issuance_authority_branch_ar:
+          type: string
+          description: The Arabic name of the issuing authority's branch.
+        bl_status_en:
+          type: string
+          description: The current status of the business license (e.g., Active, Expired).
+        bl_status_ar:
+          type: string
+          description: The current status of the business license in Arabic.
+        bl_name_en:
+          type: string
+          description: The English name of the business on the license.
+        bl_name_ar:
+          type: string
+          description: The Arabic name of the business on the license.
+        bl_legal_type_en:
+          type: string
+          description: The legal type of the business entity.
+        bl_legal_type_ar:
+          type: string
+          description: The legal type of the business license in Arabic.
+        bl_est_date:
+          type: string
+          description: The establishment date of the license as a raw string.
+        bl_exp_date:
+          type: string
+          description: The expiration date of the license as a raw string.
+        bl_type_en:
+          type: string
+          description: The type of business license in English (e.g., Commercial,
+            Professional).
+        bl_type_ar:
+          type: string
+          description: The type of business license in Arabic.
+        license_branch_flag:
+          type: string
+          description: A flag indicating if the license is for a branch ('Y' or 'N').
+  source:
+    code: "SELECT *\nFROM dim_licenses\nWHERE 1=1\n  AND ($LicensePk IS NULL OR license_pk\
+      \ = $LicensePk)\n  AND ($Bl IS NULL OR bl = $Bl)\n  AND ($Cbls IS NULL OR bl_cbls\
+      \ = $Cbls)\n  AND ($EmirateNameEn IS NULL OR emirate_name_en ILIKE '%' || $EmirateNameEn\
+      \ || '%')\n  AND ($EmirateNameAr IS NULL OR emirate_name_ar ILIKE '%' || $EmirateNameAr\
+      \ || '%')\n  AND ($IssuanceAuthorityEn IS NULL OR issuance_authority_en = $IssuanceAuthorityEn)\n\
+      \  AND ($IssuanceAuthorityAr IS NULL OR issuance_authority_ar = $IssuanceAuthorityAr)\n\
+      \  AND ($IssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en =\
+      \ $IssuanceAuthorityBranchEn)\n  AND ($IssuanceAuthorityBranchAr IS NULL OR\
+      \ issuance_authority_branch_ar = $IssuanceAuthorityBranchAr)\n  AND ($StatusEn\
+      \ IS NULL OR bl_status_en = $StatusEn)\n  AND ($StatusAr IS NULL OR bl_status_ar\
+      \ = $StatusAr)\n  AND ($NameEn IS NULL OR bl_name_en ILIKE '%' || $NameEn ||\
+      \ '%')\n  AND ($NameAr IS NULL OR bl_name_ar ILIKE '%' || $NameAr || '%')\n\
+      \  AND ($LegalTypeEn IS NULL OR bl_legal_type_en = $LegalTypeEn)\n  AND ($LegalTypeAr\
+      \ IS NULL OR bl_legal_type_ar = $LegalTypeAr)\n  AND ($EstDateFrom IS NULL OR\
+      \ bl_est_date >= $EstDateFrom)\n  AND ($EstDateTo IS NULL OR bl_est_date <=\
+      \ $EstDateTo)\n  AND ($ExpDateFrom IS NULL OR bl_exp_date >= $ExpDateFrom)\n\
+      \  AND ($ExpDateTo IS NULL OR bl_exp_date <= $ExpDateTo)\n  AND ($TypeEn IS\
+      \ NULL OR bl_type_en = $TypeEn)\n  AND ($TypeAr IS NULL OR bl_type_ar = $TypeAr)\n\
+      \  AND ($LicenseBranchFlag IS NULL OR license_branch_flag = $LicenseBranchFlag)\n\
+      \  AND ($FullAddress IS NULL OR bl_full_address ILIKE '%' || $FullAddress ||\
+      \ '%')\n  AND ($ParentLicenceLicenseNumber IS NULL OR parent_licence_license_number\
+      \ ILIKE '%' || $ParentLicenceLicenseNumber || '%')\n  AND ($ParentLicenseIssuanceAuthorityEn\
+      \ IS NULL OR parent_license_issuance_authority_en = $ParentLicenseIssuanceAuthorityEn)\n\
+      \  AND ($ParentLicenseIssuanceAuthorityAr IS NULL OR parent_license_issuance_authority_ar\
+      \ = $ParentLicenseIssuanceAuthorityAr)\n  AND ($RelationshipTypeEn IS NULL OR\
+      \ relationship_type_en = $RelationshipTypeEn)\n  AND ($RelationshipTypeAr IS\
+      \ NULL OR relationship_type_ar = $RelationshipTypeAr)\n  AND ($OwnerNationalityAr\
+      \ IS NULL OR owner_nationality_ar = $OwnerNationalityAr)\n  AND ($OwnerGender\
+      \ IS NULL OR owner_gender = $OwnerGender)\n  AND ($OwnerNationalityEn IS NULL\
+      \ OR owner_nationality_en = $OwnerNationalityEn)\n  AND ($BusinessActivityCode\
+      \ IS NULL OR business_activity_code ILIKE '%' || $BusinessActivityCode || '%')\n\
+      \  AND ($BusinessActivityDescEn IS NULL OR business_activity_desc_en ILIKE '%'\
+      \ || $BusinessActivityDescEn || '%')\n  AND ($BusinessActivityDescAr IS NULL\
+      \ OR business_activity_desc_ar ILIKE '%' || $BusinessActivityDescAr || '%')\n\
+      \  AND ($LicenseLatitude IS NULL OR license_latitude = $LicenseLatitude)\n \
+      \ AND ($LicenseLongitude IS NULL OR license_longitude = $LicenseLongitude)\n\
+      \  AND ($LicenseLatitude1 IS NULL OR license_latitude_1 = $LicenseLatitude1)\n\
+      \  AND ($LicenseLongitude1 IS NULL OR license_longitude_1 = $LicenseLongitude1)\n\
+      \  AND ($EstDateDFrom IS NULL OR bl_est_date_d >= $EstDateDFrom)\n  AND ($EstDateDTo\
+      \ IS NULL OR bl_est_date_d <= $EstDateDTo)\n  AND ($ExpDateDFrom IS NULL OR\
+      \ bl_exp_date_d >= $ExpDateDFrom)\n  AND ($ExpDateDTo IS NULL OR bl_exp_date_d\
+      \ <= $ExpDateDTo)\n  AND ($LatDd IS NULL OR lat_dd = $LatDd)\n  AND ($LonDd\
+      \ IS NULL OR lon_dd = $LonDd)\nORDER BY parent_licence_license_number DESC\n\
+      LIMIT $page_size OFFSET (($page - 1) * $page_size)"
+  enabled: true

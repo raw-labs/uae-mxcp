@@ -1,0 +1,42 @@
+mxcp: 1.0.0
+tool:
+  name: aggregate_licenses
+  description: Aggregate licenses data by various dimensions
+  parameters:
+  - name: groupByLicenseBranchFlag
+    type: boolean
+    description: Group by LicenseBranchFlag
+    default: false
+  - name: filterLicenseBranchFlag
+    type: string
+    description: Filter by LicenseBranchFlag
+  - name: EstDateFrom
+    type: string
+    format: date
+    description: Filter EstDate from date (YYYY-MM-DD)
+  - name: EstDateTo
+    type: string
+    format: date
+    description: Filter EstDate to date (YYYY-MM-DD)
+  - name: ExpDateFrom
+    type: string
+    format: date
+    description: Filter ExpDate from date (YYYY-MM-DD)
+  - name: ExpDateTo
+    type: string
+    format: date
+    description: Filter ExpDate to date (YYYY-MM-DD)
+  return:
+    type: array
+    items:
+      type: object
+  source:
+    code: "SELECT\n  CASE WHEN $groupByLicenseBranchFlag THEN license_branch_flag\
+      \ ELSE 'All' END as license_branch_flag,\n  COUNT(*) as total_count,\n  COUNT(DISTINCT\
+      \ license_pk) as unique_licenses\nFROM dim_licenses\nWHERE 1=1\n  AND ($filterLicenseBranchFlag\
+      \ IS NULL OR license_branch_flag = $filterLicenseBranchFlag)\n  AND ($EstDateFrom\
+      \ IS NULL OR bl_est_date_d >= $EstDateFrom::DATE)\n  AND ($EstDateTo IS NULL\
+      \ OR bl_est_date_d <= $EstDateTo::DATE)\n  AND ($ExpDateFrom IS NULL OR bl_exp_date_d\
+      \ >= $ExpDateFrom::DATE)\n  AND ($ExpDateTo IS NULL OR bl_exp_date_d <= $ExpDateTo::DATE)\n\
+      GROUP BY 1\nORDER BY total_count DESC\nLIMIT 100"
+  enabled: true

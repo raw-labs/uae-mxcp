@@ -216,6 +216,10 @@ class SemanticAnalyzer:
             except ValueError:
                 pass
         
+        # If column has accepted_values test, it's likely categorical
+        if self._has_enum_values(col_info):
+            return ColumnClassification.CATEGORICAL
+        
         # Use pattern matching
         for classification, patterns in self.compiled_patterns.items():
             for pattern in patterns:
@@ -231,7 +235,18 @@ class SemanticAnalyzer:
         elif any(t in data_type for t in ['decimal', 'numeric', 'money']):
             return ColumnClassification.MONETARY
         
+        # Default to CATEGORICAL for string types that don't match other patterns
+        if data_type in ['varchar', 'string', 'text', 'char']:
+            return ColumnClassification.CATEGORICAL
+        
         return ColumnClassification.UNKNOWN
+    
+    def _has_enum_values(self, col_info: Dict) -> bool:
+        """Check if column has enum values from tests"""
+        for test in col_info.get('tests', []):
+            if isinstance(test, dict) and 'accepted_values' in test:
+                return True
+        return False
     
     def _extract_enum_values(self, col_info: Dict) -> List[str]:
         """Extract enum values from column tests"""

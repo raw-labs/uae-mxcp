@@ -404,6 +404,92 @@ LIMIT 100
         
         return entity.columns[0].name if entity.columns else "id"
     
+    def _generate_common_filter_parameters(self, entity: BusinessEntity, limit: int = 10) -> List[Dict[str, Any]]:
+        """Generate common filter parameters that can be added to any tool"""
+        parameters = []
+        
+        # Add filters for key categorical fields
+        categorical_fields = [
+            col for col in entity.columns
+            if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
+        ]
+        
+        for field in categorical_fields[:limit]:
+            param_name = f"filter{self._to_business_name(field.name)}"
+            param_def = {
+                "name": param_name,
+                "type": "string",
+                "description": f"Filter by {self._to_business_name(field.name)}",
+            }
+            if field.enum_values:
+                param_def["enum"] = field.enum_values
+            parameters.append(param_def)
+        
+        # Add date range filters for temporal fields
+        temporal_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.TEMPORAL
+        ]
+        
+        for field in temporal_fields[:2]:  # Limit to 2 most important date fields
+            param_base = self._to_business_name(field.name)
+            parameters.extend([
+                {
+                    "name": f"{param_base}From",
+                    "type": "string",
+                    "format": "date",
+                    "description": f"Filter {param_base} from date (YYYY-MM-DD)"
+                },
+                {
+                    "name": f"{param_base}To",
+                    "type": "string",
+                    "format": "date",
+                    "description": f"Filter {param_base} to date (YYYY-MM-DD)"
+                }
+            ])
+        
+        return parameters
+    
+    def _generate_common_where_clauses(self, entity: BusinessEntity, limit: int = 10) -> List[str]:
+        """Generate WHERE clauses for common filters"""
+        where_clauses = []
+        
+        # Add filters for categorical fields
+        categorical_fields = [
+            col for col in entity.columns
+            if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
+        ]
+        
+        for field in categorical_fields[:limit]:
+            param_name = f"filter{self._to_business_name(field.name)}"
+            where_clauses.append(
+                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
+            )
+        
+        # Add date range filters
+        temporal_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.TEMPORAL
+        ]
+        
+        for field in temporal_fields[:2]:
+            param_base = self._to_business_name(field.name)
+            # Handle both string and date fields
+            if field.data_type.lower() == 'date':
+                where_clauses.extend([
+                    f"  AND (${param_base}From IS NULL OR {field.name} >= ${param_base}From::DATE)",
+                    f"  AND (${param_base}To IS NULL OR {field.name} <= ${param_base}To::DATE)"
+                ])
+            else:
+                # For string date fields, use the _d version if available
+                date_field = field.name.replace('_date', '_date_d')
+                where_clauses.extend([
+                    f"  AND (${param_base}From IS NULL OR {date_field} >= ${param_base}From::DATE)",
+                    f"  AND (${param_base}To IS NULL OR {date_field} <= ${param_base}To::DATE)"
+                ])
+        
+        return where_clauses
+    
     def _generate_return_properties(self, entity: BusinessEntity) -> Dict[str, Any]:
         """Generate return type properties for the entity"""
         properties = {}
@@ -436,18 +522,28 @@ LIMIT 100
     
     def _generate_aggregation_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
         """Generate aggregation tool for complex queries"""
-        # Find aggregatable fields
+        # Find aggregatable fields - include both CATEGORICAL and BUSINESS_STATUS
         categorical_fields = [
             col for col in entity.columns
             if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
         ]
+        
+        # Also include other string fields that could be used for grouping
+        string_fields = [
+            col for col in entity.columns
+            if col.data_type.lower() in ['varchar', 'string', 'text', 'char'] 
+            and col.classification not in [ColumnClassification.DESCRIPTIVE]
+            and col not in categorical_fields
+        ]
+        
+        all_groupable_fields = categorical_fields + string_fields
         
         metric_fields = [
             col for col in entity.columns
             if col.classification == ColumnClassification.METRIC
         ]
         
-        if not categorical_fields:
+        if not all_groupable_fields:
             return None
         
         tool_name = f"aggregate_{entity.name}"
@@ -455,8 +551,8 @@ LIMIT 100
         
         parameters = []
         
-        # Add group by parameters for each categorical field
-        for field in categorical_fields[:10]:  # Limit to 10 most important
+        # Add group by parameters for ALL categorical/string fields
+        for field in all_groupable_fields:
             param_name = f"groupBy{self._to_business_name(field.name)}"
             parameters.append({
                 "name": param_name,
@@ -465,38 +561,19 @@ LIMIT 100
                 "default": False
             })
         
-        # Add filters for categorical fields
-        for field in categorical_fields[:5]:  # Top 5 for filtering
-            param_name = f"filter{self._to_business_name(field.name)}"
-            param_def = {
-                "name": param_name,
-                "type": "string",
-                "description": f"Filter by {self._to_business_name(field.name)}",
-                "default": None
-            }
-            if field.enum_values:
-                param_def["enum"] = field.enum_values
-            parameters.append(param_def)
+        # Add common filters
+        parameters.extend(self._generate_common_filter_parameters(entity))
         
         # Build dynamic SQL
-        group_by_columns = []
         select_columns = ["COUNT(*) as total_count", "COUNT(DISTINCT license_pk) as unique_licenses"]
-        where_clauses = []
         
         # Add dynamic group by columns based on parameters
-        for field in categorical_fields[:10]:
+        for i, field in enumerate(all_groupable_fields):
             param_name = f"groupBy{self._to_business_name(field.name)}"
-            group_by_columns.append(
-                f"  CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}"
-            )
-            select_columns.insert(0, f"CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}")
+            select_columns.insert(i, f"CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}")
         
-        # Add filters
-        for field in categorical_fields[:5]:
-            param_name = f"filter{self._to_business_name(field.name)}"
-            where_clauses.append(
-                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
-            )
+        # Get common where clauses
+        where_clauses = self._generate_common_where_clauses(entity)
         
         # Build the final SQL
         sql = f"""
@@ -505,7 +582,7 @@ SELECT
 FROM {entity.primary_model.name}
 WHERE 1=1
 {chr(10).join(where_clauses)}
-GROUP BY {', '.join([f"{i+1}" for i in range(len(group_by_columns))])}
+GROUP BY {', '.join([f"{i+1}" for i in range(len(all_groupable_fields))])}
 ORDER BY total_count DESC
 LIMIT 100
         """.strip()
@@ -573,6 +650,12 @@ LIMIT 100
             }
         ]
         
+        # Add common filters
+        parameters.extend(self._generate_common_filter_parameters(entity))
+        
+        # Get common where clauses
+        where_clauses = self._generate_common_where_clauses(entity)
+        
         # Build SQL
         sql = f"""
 SELECT
@@ -603,6 +686,7 @@ WHERE CASE
       WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
       ELSE bl_est_date_d
     END <= $endDate::DATE)
+{chr(10).join(where_clauses)}
 GROUP BY period
 ORDER BY period DESC
         """.strip()
@@ -644,6 +728,10 @@ ORDER BY period DESC
         tool_name = f"geo_{entity.name}"
         description = f"Analyze {entity.name} by geographic location"
         
+        # Find coordinate fields
+        lat_field = next((col.name for col in entity.columns if 'lat' in col.name.lower() and 'dd' in col.name.lower()), 'lat_dd')
+        lon_field = next((col.name for col in entity.columns if 'lon' in col.name.lower() and 'dd' in col.name.lower()), 'lon_dd')
+        
         # Find the main geographic field (e.g., emirate)
         main_geo = next((f for f in geo_fields if 'emirate' in f.name.lower()), geo_fields[0])
         
@@ -660,8 +748,33 @@ ORDER BY period DESC
                 "type": "boolean",
                 "description": "Include lat/lon statistics",
                 "default": False
+            },
+            {
+                "name": "boundingBox",
+                "type": "object",
+                "description": "Filter by bounding box coordinates",
+                "properties": {
+                    "minLat": {"type": "number"},
+                    "maxLat": {"type": "number"},
+                    "minLon": {"type": "number"},
+                    "maxLon": {"type": "number"}
+                }
             }
         ]
+        
+        # Add common filters
+        parameters.extend(self._generate_common_filter_parameters(entity))
+        
+        # Get common where clauses
+        where_clauses = self._generate_common_where_clauses(entity)
+        
+        # Add bounding box filter
+        where_clauses.extend([
+            f"  AND ($boundingBox.minLat IS NULL OR {lat_field} >= $boundingBox.minLat)",
+            f"  AND ($boundingBox.maxLat IS NULL OR {lat_field} <= $boundingBox.maxLat)",
+            f"  AND ($boundingBox.minLon IS NULL OR {lon_field} >= $boundingBox.minLon)",
+            f"  AND ($boundingBox.maxLon IS NULL OR {lon_field} <= $boundingBox.maxLon)"
+        ])
         
         sql = f"""
 SELECT
@@ -670,26 +783,45 @@ SELECT
     WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
     WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
     WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
     ELSE emirate_name_en
   END as location,
   COUNT(*) as count,
   COUNT(DISTINCT license_pk) as unique_licenses,
   CASE 
-    WHEN $includeCoordinates THEN AVG(CAST(lat_dd AS FLOAT))
+    WHEN $includeCoordinates THEN AVG({lat_field})
     ELSE NULL
   END as avg_latitude,
   CASE 
-    WHEN $includeCoordinates THEN AVG(CAST(lon_dd AS FLOAT))
+    WHEN $includeCoordinates THEN AVG({lon_field})
     ELSE NULL
-  END as avg_longitude
+  END as avg_longitude,
+  CASE 
+    WHEN $includeCoordinates THEN MIN({lat_field})
+    ELSE NULL
+  END as min_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN MAX({lat_field})
+    ELSE NULL
+  END as max_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN MIN({lon_field})
+    ELSE NULL
+  END as min_longitude,
+  CASE 
+    WHEN $includeCoordinates THEN MAX({lon_field})
+    ELSE NULL
+  END as max_longitude
 FROM {entity.primary_model.name}
 WHERE CASE 
     WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
     WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
     WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
     WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
     ELSE emirate_name_en
   END IS NOT NULL
+{chr(10).join(where_clauses)}
 GROUP BY location
 ORDER BY count DESC
         """.strip()
@@ -709,7 +841,11 @@ ORDER BY count DESC
                             "count": {"type": "integer"},
                             "unique_licenses": {"type": "integer"},
                             "avg_latitude": {"type": "number"},
-                            "avg_longitude": {"type": "number"}
+                            "avg_longitude": {"type": "number"},
+                            "min_latitude": {"type": "number"},
+                            "max_latitude": {"type": "number"},
+                            "min_longitude": {"type": "number"},
+                            "max_longitude": {"type": "number"}
                         }
                     }
                 },
