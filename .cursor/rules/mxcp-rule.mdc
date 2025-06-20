@@ -11,8 +11,8 @@ alwaysApply: true
   },
   "then": {
     "auto_context": {
-      "priority_files": ["docs/MXCP_PROJECT_ASSISTANT.md"]
+      "priority_files": [".cursor/MXCP_PROJECT_ASSISTANT.md"]
     },
-    "preamble": "This is an MXCP project. I will begin by carefully reviewing the rules in `docs/MXCP_PROJECT_ASSISTANT.md` and will strictly adhere to the AI Change Protocol (AICP) and the project's design philosophy for all subsequent actions."
+    "preamble": "This is an MXCP project. I will begin by carefully reviewing the rules in `.cursor/MXCP_PROJECT_ASSISTANT.md` and will strictly adhere to the AI Change Protocol (AICP) and the project's design philosophy for all subsequent actions."
   }
 }
