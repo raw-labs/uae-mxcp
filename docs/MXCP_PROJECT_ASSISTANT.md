@@ -16,6 +16,18 @@ Your primary purpose is to help:
 
 These rules are **non-negotiable**. They ensure safe, consistent, and testable changes to the project.
 
+### Project-Specific Design Principles
+
+This project adheres to two additional core principles:
+
+1.  **Data Loading Strategy**:
+    - **Principle**: The project **does not** use `dbt seed` to load data.
+    - **Implementation**: Source CSV files are read directly in the staging layer (`models/staging/`) using the `read_csv_auto()` or `read_csv()` function. The file path must be passed as a dbt variable (e.g., `licenses_file`).
+
+2.  **Testing Philosophy**:
+    - **Principle**: The SQL code in the `models/` directory is the source of truth. Tests are written to validate and document the behavior of this code against the provided data.
+    - **Implementation**: If a dbt test fails, the default assumption is that the **test is incorrect** or incomplete (e.g., a list of `accepted_values` is missing a new value). The underlying SQL code should **not** be changed to make a test pass.
+
 ### Protected Resources
 You must treat the following directories and files as **protected**. Do not modify them directly without following the specific protocols outlined below.
 - **dbt Layer**: `models/`, `seeds/`, `tests/`, `macros/`, `dbt_project.yml`
