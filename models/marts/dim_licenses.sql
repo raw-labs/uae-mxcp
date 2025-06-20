@@ -30,7 +30,12 @@ CREATE OR REPLACE MACRO dms_to_dd(dms) AS (
 
 SELECT
     -- corrected field name (bl_num) -> now corrected to include activity to create a unique PK
-    md5(issuance_authority_en || '|' || bl || '|' || business_activity_code || '|' || business_activity_desc_en) AS license_pk,
+    md5(
+        COALESCE(issuance_authority_en, '') || '|' ||
+        COALESCE(bl, '') || '|' ||
+        COALESCE(business_activity_code, '') || '|' ||
+        COALESCE(business_activity_desc_en, '')
+    ) AS license_pk,
     s.*,
 
     -- proper DATEs

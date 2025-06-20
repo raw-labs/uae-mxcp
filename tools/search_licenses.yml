@@ -12,12 +12,24 @@ tool:
   parameters:
     - { name: "page", type: "integer", description: "Page number (1-based)", default: 1, minimum: 1 }
     - { name: "page_size", type: "integer", description: "Number of records per page", default: 20, minimum: 1, maximum: 1000 }
-    - { name: "emirate_name_en", type: "string", description: "Emirate (EN) exact match", default: null, examples: ["Dubai"] }
+    - name: "emirate_name_en"
+      type: "string"
+      description: "Emirate (EN) exact match"
+      default: null
+      examples:
+        - 'Dubai'
+        - 'Abu Dhabi'
+        - 'Sharjah'
+        - 'Ajman'
+        - 'Ras Al Khaimah'
+        - 'Fujairah'
+        - 'Umm Al Quwain'
+        - 'Umm Al-Quwain'
     - { name: "emirate_name_en_like", type: "string", description: "Emirate (EN) substring match", default: null, examples: ["Dub"] }
     - { name: "emirate_name_ar", type: "string", description: "Emirate (AR) exact match", default: null }
     - { name: "emirate_name_ar_like", type: "string", description: "Emirate (AR) substring match", default: null }
     - { name: "issuance_authority_en", type: "string", description: "Issuance authority (EN) exact match", default: null }
-    - { name: "issuance_authority_en_like", type: "string", description: "Issuance authority (EN) substring match", default: null }
+    - { name: "issuance_authority_en_like", type: "string", description: "Issuing authority (EN) substring match", default: null }
     - { name: "issuance_authority_ar", type: "string", description: "Issuance authority (AR) exact match", default: null }
     - { name: "issuance_authority_ar_like", type: "string", description: "Issuance authority (AR) substring match", default: null }
     - { name: "issuance_authority_branch_en", type: "string", description: "Branch (EN) exact match", default: null }
@@ -36,7 +48,7 @@ tool:
     - { name: "bl_est_date_to", type: "string", format: "date", description: "Establishment date to (YYYY-MM-DD)", default: null }
     - { name: "bl_exp_date_from", type: "string", format: "date", description: "Expiry date from (YYYY-MM-DD)", default: null }
     - { name: "bl_exp_date_to", type: "string", format: "date", description: "Expiry date to (YYYY-MM-DD)", default: null }
-    - { name: "bl_status_en", type: "string", description: "Status (EN) exact match", default: null }
+    - { name: "bl_status_en", type: "string", description: "License status (EN) exact match", default: null }
     - { name: "bl_status_en_like", type: "string", description: "Status (EN) substring match", default: null }
     - { name: "bl_status_ar", type: "string", description: "Status (AR) exact match", default: null }
     - { name: "bl_status_ar_like", type: "string", description: "Status (AR) substring match", default: null }
@@ -44,7 +56,29 @@ tool:
     - { name: "bl_legal_type_en_like", type: "string", description: "Legal type (EN) substring match", default: null }
     - { name: "bl_legal_type_ar", type: "string", description: "Legal type (AR) exact match", default: null }
     - { name: "bl_legal_type_ar_like", type: "string", description: "Legal type (AR) substring match", default: null }
-    - { name: "bl_type_en", type: "string", description: "License type (EN) exact match", default: null }
+    - name: "bl_type_en"
+      type: "string"
+      description: "License type (EN) exact match"
+      default: null
+      examples:
+        - 'Agrecultural & Animals'
+        - 'Business Invest License'
+        - 'Commercial'
+        - "E'dmad  (Reliance)"
+        - 'E-Commerce License'
+        - 'Educational License'
+        - 'Event   License'
+        - 'Handicraft'
+        - 'Industrial'
+        - 'International Business Companies'
+        - 'Media License'
+        - 'Preliminary License'
+        - 'Professional'
+        - 'Service'
+        - 'Service License'
+        - 'Standard'
+        - 'Trade'
+        - 'tourism license'
     - { name: "bl_type_en_like", type: "string", description: "License type (EN) substring match", default: null }
     - { name: "bl_type_ar", type: "string", description: "License type (AR) exact match", default: null }
     - { name: "bl_type_ar_like", type: "string", description: "License type (AR) substring match", default: null }
@@ -54,22 +88,51 @@ tool:
     - { name: "license_latitude_max", type: "number", description: "Maximum latitude", default: null }
     - { name: "license_longitude_min", type: "number", description: "Minimum longitude", default: null }
     - { name: "license_longitude_max", type: "number", description: "Maximum longitude", default: null }
-    - { name: "license_branch_flag", type: "string", description: "Branch flag (Y/N)", default: null }
+    - name: "license_branch_flag"
+      type: "string"
+      description: "Branch flag (Y/N)"
+      default: null
+      examples: ['Y', 'N']
     - { name: "parent_licence_license_number", type: "string", description: "Parent license number exact match", default: null }
     - { name: "parent_licence_license_number_like", type: "string", description: "Parent license number substring match", default: null }
     - { name: "parent_license_issuance_authority_en", type: "string", description: "Parent authority (EN) exact match", default: null }
     - { name: "parent_license_issuance_authority_en_like", type: "string", description: "Parent authority (EN) substring match", default: null }
     - { name: "parent_license_issuance_authority_ar", type: "string", description: "Parent authority (AR) exact match", default: null }
-    - { name: "parent_license_issuance_authority_ar_like", type: "string", description: "Parent authority (AR) substring match", default: null }
-    - { name: "relationship_type_en", type: "string", description: "Relationship role (EN) exact match", default: null }
-    - { name: "relationship_type_en_like", type: "string", description: "Relationship role (EN) substring match", default: null }
-    - { name: "relationship_type_ar", type: "string", description: "Relationship role (AR) exact match", default: null }
-    - { name: "relationship_type_ar_like", type: "string", description: "Relationship role (AR) substring match", default: null }
+    - { name: "parent_license_issuance_authority_ar_like", type: "string", description: "Parent issuing authority (AR) substring match", default: null }
+    - name: "relationship_type_en"
+      type: "string"
+      description: "Relationship type (EN) exact match"
+      default: null
+      examples:
+        - 'Authorized signatory'
+        - 'Chairman of the Board of Directors'
+        - 'Cheif Executive'
+        - 'Designated Member'
+        - 'Doctor'
+        - 'Founder'
+        - 'Leased-Rented'
+        - 'Owner'
+        - 'Partner'
+        - 'Pharmacist'
+        - 'Representative of the Board'
+        - 'Representative of the Successors '
+        - 'Secretary'
+        - 'Service Agent'
+        - 'Shareholders of the Company'
+        - 'Successors'
+        - 'The Board of Directors, Member and CEO/Executive Director'
+    - { name: "relationship_type_en_like", type: "string", description: "Relationship type (EN) substring match", default: null }
+    - { name: "relationship_type_ar", type: "string", description: "Relationship type (AR) exact match", default: null }
+    - { name: "relationship_type_ar_like", type: "string", description: "Relationship type (AR) substring match", default: null }
     - { name: "owner_nationality_en", type: "string", description: "Owner nationality (EN) exact match", default: null }
     - { name: "owner_nationality_en_like", type: "string", description: "Owner nationality (EN) substring match", default: null }
     - { name: "owner_nationality_ar", type: "string", description: "Owner nationality (AR) exact match", default: null }
     - { name: "owner_nationality_ar_like", type: "string", description: "Owner nationality (AR) substring match", default: null }
-    - { name: "owner_gender", type: "string", description: "Owner gender exact match", default: null }
+    - name: "owner_gender"
+      type: "string"
+      description: "Owner gender exact match"
+      default: null
+      examples: ['Male', 'Female', 'UnKnown']
     - { name: "business_activity_code", type: "string", description: "Business activity code exact match", default: null }
     - { name: "business_activity_code_like", type: "string", description: "Business activity code substring match", default: null }
     - { name: "business_activity_desc_en", type: "string", description: "Business activity description (EN) exact match", default: null }

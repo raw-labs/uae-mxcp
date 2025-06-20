@@ -7,6 +7,7 @@ SELECT
     WHEN $group_by = 'bl_legal_type_en' THEN bl_legal_type_en
     WHEN $group_by = 'owner_nationality_en' THEN owner_nationality_en
     WHEN $group_by = 'relationship_type_en' THEN relationship_type_en
+    WHEN $group_by = 'owner_gender' THEN owner_gender
     ELSE NULL
   END AS group_1,
   -- Dynamically select group_2 if present
@@ -17,6 +18,7 @@ SELECT
     WHEN strpos($group_by, ',') > 0 AND split_part($group_by, ',', 2) = 'bl_legal_type_en' THEN bl_legal_type_en
     WHEN strpos($group_by, ',') > 0 AND split_part($group_by, ',', 2) = 'owner_nationality_en' THEN owner_nationality_en
     WHEN strpos($group_by, ',') > 0 AND split_part($group_by, ',', 2) = 'relationship_type_en' THEN relationship_type_en
+    WHEN strpos($group_by, ',') > 0 AND split_part($group_by, ',', 2) = 'owner_gender' THEN owner_gender
     ELSE NULL
   END AS group_2,
   CASE WHEN strpos($metrics, 'count') > 0 THEN COUNT(*) END AS count,
@@ -38,6 +40,7 @@ WHERE 1=1
   AND ($bl_legal_type_en IS NULL OR bl_legal_type_en = $bl_legal_type_en)
   AND ($owner_nationality_en IS NULL OR owner_nationality_en = $owner_nationality_en)
   AND ($relationship_type_en IS NULL OR relationship_type_en = $relationship_type_en)
+  AND ($owner_gender IS NULL OR owner_gender = $owner_gender)
   AND ($bl_est_date_d_from IS NULL OR bl_est_date_d >= $bl_est_date_d_from)
   AND ($bl_est_date_d_to IS NULL OR bl_est_date_d <= $bl_est_date_d_to)
   AND ($bl_exp_date_d_from IS NULL OR bl_exp_date_d >= $bl_exp_date_d_from)

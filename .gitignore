@@ -15,6 +15,7 @@ data/*.csv
 dbt_packages/
 .user.yml
 .cursor/
+package-lock.yml
 
 # Sample data is allowed
 !seeds/licenses_sample.csv

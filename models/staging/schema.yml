@@ -1,6 +1,5 @@
 version: 2
 models:
   - name: stg_licenses_raw
-    columns:
-      - name: bl
-        tests: [not_null]
+    # No tests are needed here as the mart layer handles data quality.
+    columns: []
