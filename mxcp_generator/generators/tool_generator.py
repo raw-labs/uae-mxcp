@@ -83,14 +83,11 @@ class ToolGenerator:
             parameters.append({
                 "name": param_name,
                 "type": "string",
-                "description": f"Search by {param_name} (partial match supported)",
-                "required": False
+                "description": f"Search by {param_name} (partial match supported)"
             })
             
             where_conditions.append(
-                f"{{% if {param_name} %}}\n"
-                f"  AND {field.name} ILIKE '%' || ${param_name} || '%'\n"
-                f"{{% endif %}}"
+                f"  AND (${param_name} IS NULL OR {field.name} ILIKE '%' || ${param_name} || '%')"
             )
         
         # Add status filter if available
@@ -106,8 +103,7 @@ class ToolGenerator:
             param_def = {
                 "name": param_name,
                 "type": "string",
-                "description": f"Filter by {param_name}",
-                "required": False
+                "description": f"Filter by {param_name}"
             }
             
             # Add enum values if available
@@ -116,20 +112,21 @@ class ToolGenerator:
             
             parameters.append(param_def)
             where_conditions.append(
-                f"{{% if {param_name} %}}\n"
-                f"  AND {field.name} = ${param_name}\n"
-                f"{{% endif %}}"
+                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
             )
         
         # Build SQL query
         sql = f"""
 SELECT *
-FROM {{{{ schema }}}}.{entity.primary_model.name}
+FROM {entity.primary_model.name}
 WHERE 1=1
 {chr(10).join(where_conditions)}
 ORDER BY {self._get_default_order_column(entity)}
 LIMIT 100
         """.strip()
+        
+        # Generate return type with properties at the correct level
+        return_properties = self._generate_return_properties(entity)
         
         return {
             "mxcp": self.version,
@@ -141,7 +138,7 @@ LIMIT 100
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "properties": self._generate_return_properties(entity)
+                        "properties": return_properties  # Properties inside items
                     }
                 },
                 "source": {
@@ -172,8 +169,7 @@ LIMIT 100
             param_def = {
                 "name": param_name,
                 "type": "boolean" if field.data_type.lower() in ['boolean', 'bool'] else "string",
-                "description": f"Filter by {param_name}",
-                "required": False
+                "description": f"Filter by {param_name}"
             }
             
             if field.enum_values:
@@ -182,18 +178,19 @@ LIMIT 100
             parameters.append(param_def)
             
             where_conditions.append(
-                f"{{% if {param_name} is defined %}}\n"
-                f"  AND {field.name} = ${param_name}\n"
-                f"{{% endif %}}"
+                f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
             )
         
         sql = f"""
 SELECT *
-FROM {{{{ schema }}}}.{entity.primary_model.name}
+FROM {entity.primary_model.name}
 WHERE 1=1
 {chr(10).join(where_conditions)}
 ORDER BY {self._get_default_order_column(entity)}
         """.strip()
+        
+        # Generate return type with properties at the correct level
+        return_properties = self._generate_return_properties(entity)
         
         return {
             "mxcp": self.version,
@@ -205,7 +202,7 @@ ORDER BY {self._get_default_order_column(entity)}
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "properties": self._generate_return_properties(entity)
+                        "properties": return_properties  # Properties inside items
                     }
                 },
                 "source": {
@@ -247,7 +244,6 @@ ORDER BY {self._get_default_order_column(entity)}
                 "type": "string",
                 "description": "Dimension to group results by",
                 "enum": [self._to_business_name(f.name) for f in dimension_fields[:5]],
-                "required": False
             })
         
         # Add time period parameter if temporal fields exist
@@ -263,7 +259,6 @@ ORDER BY {self._get_default_order_column(entity)}
                 "description": "Time period for analysis",
                 "enum": ["day", "week", "month", "quarter", "year"],
                 "default": "month",
-                "required": False
             })
         
         # Build SQL with aggregations
@@ -276,17 +271,12 @@ ORDER BY {self._get_default_order_column(entity)}
                 f"  MAX({field.name}) as max_{agg_name}"
             )
         
+        # For now, just generate a simple aggregation query without dynamic grouping
         sql = f"""
 SELECT
-{{% if group_by %}}
-  {{{{ group_by }}}},
-{{% endif %}}
+  COUNT(*) as record_count,
 {','.join(metric_aggregations)}
-FROM {{{{ schema }}}}.{entity.primary_model.name}
-{{% if group_by %}}
-GROUP BY {{{{ group_by }}}}
-ORDER BY {{{{ group_by }}}}
-{{% endif %}}
+FROM {entity.primary_model.name}
         """.strip()
         
         return {
@@ -298,7 +288,8 @@ ORDER BY {{{{ group_by }}}}
                 "return": {
                     "type": "array",
                     "items": {
-                        "type": "object"
+                        "type": "object",
+                        "properties": self._generate_return_properties(entity)  # Properties inside items
                     }
                 },
                 "source": {
@@ -322,13 +313,11 @@ ORDER BY {{{{ group_by }}}}
 SELECT 
   a.*,
   b.* EXCLUDE ({', '.join([col for _, col in rel_info.join_keys])})
-FROM {{{{ schema }}}}.{entity.primary_model.name} a
-LEFT JOIN {{{{ schema }}}}.dim_{rel_info.to_entity} b
+FROM {entity.primary_model.name} a
+LEFT JOIN dim_{rel_info.to_entity} b
   ON {' AND '.join(join_conditions)}
 WHERE 1=1
-{{% if id %}}
-  AND a.{self._get_primary_key(entity)} = $id
-{{% endif %}}
+  AND ($id IS NULL OR a.{self._get_primary_key(entity)} = $id)
 LIMIT 100
         """.strip()
         
@@ -341,7 +330,6 @@ LIMIT 100
                     "name": "id",
                     "type": "string",
                     "description": f"{entity.name} identifier",
-                    "required": False
                 }],
                 "return": {
                     "type": "array",

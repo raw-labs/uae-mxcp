@@ -100,7 +100,7 @@ tool:
         distinct_count: { type: integer }
   source:
     file: "aggregate_licenses.sql"
-  enabled: true
+  enabled: false
   # tests:
   #   - name: "basic"
   #     arguments:

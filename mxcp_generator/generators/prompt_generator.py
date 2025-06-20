@@ -90,7 +90,7 @@ class PromptGenerator:
                     desc += f" (key fields: {', '.join(key_columns)})"
             entity_descriptions.append(desc)
         
-        template = f"""You have access to business data with the following entities:
+        system_prompt = f"""You have access to business data with the following entities:
 
 {chr(10).join(entity_descriptions)}
 
@@ -127,7 +127,19 @@ Remember to be specific in your queries and use the appropriate tools for each t
             "prompt": {
                 "name": prompt_name,
                 "description": description,
-                "template": template,
+                "parameters": [],
+                "messages": [
+                    {
+                        "role": "system",
+                        "type": "text",
+                        "prompt": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "type": "text",
+                        "prompt": "Welcome! I can help you explore and analyze business data. What would you like to know?"
+                    }
+                ],
                 "enabled": True
             }
         }
@@ -171,8 +183,8 @@ Remember to be specific in your queries and use the appropriate tools for each t
             elif col.classification == ColumnClassification.METRIC:
                 key_fields["metrics"].append(col.name)
         
-        # Build template
-        template = f"""## {entity.name.replace('_', ' ').title()} Analysis Guide
+        # Build system prompt
+        system_prompt = f"""## {entity.name.replace('_', ' ').title()} Analysis Guide
 
 {entity.business_description or f'This entity contains data about {entity.name}.'}
 
@@ -208,7 +220,19 @@ Remember to be specific in your queries and use the appropriate tools for each t
             "prompt": {
                 "name": prompt_name,
                 "description": description,
-                "template": template,
+                "parameters": [],
+                "messages": [
+                    {
+                        "role": "system",
+                        "type": "text",
+                        "prompt": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "type": "text",
+                        "prompt": f"I'm ready to help you analyze {entity.name} data. What would you like to know?"
+                    }
+                ],
                 "enabled": True
             }
         }
@@ -234,7 +258,7 @@ Remember to be specific in your queries and use the appropriate tools for each t
             if any(col.classification == ColumnClassification.METRIC for col in entity.columns)
         ]
         
-        template = f"""## Business Analysis Guide
+        system_prompt = f"""## Business Analysis Guide
 
 You have access to analytical tools for performing complex business analysis.
 
@@ -288,7 +312,19 @@ You have access to analytical tools for performing complex business analysis.
             "prompt": {
                 "name": prompt_name,
                 "description": description,
-                "template": template,
+                "parameters": [],
+                "messages": [
+                    {
+                        "role": "system",
+                        "type": "text",
+                        "prompt": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "type": "text",
+                        "prompt": "I'm ready to help you perform business analysis. What insights are you looking for?"
+                    }
+                ],
                 "enabled": True
             }
         }

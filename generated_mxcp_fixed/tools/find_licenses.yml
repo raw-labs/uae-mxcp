@@ -1,0 +1,91 @@
+mxcp: 1.0.0
+tool:
+  name: find_licenses
+  description: Search for licenses records with intelligent filtering
+  parameters:
+  - name: ParentLicenceLicenseNumber
+    type: string
+    description: Search by ParentLicenceLicenseNumber (partial match supported)
+    required: false
+  - name: BusinessActivityCode
+    type: string
+    description: Search by BusinessActivityCode (partial match supported)
+    required: false
+  - name: LicenseBranchFlag
+    type: string
+    description: Filter by LicenseBranchFlag
+    required: false
+  return:
+    type: array
+    items:
+      type: object
+    properties:
+      license_pk:
+        type: string
+        description: The unique primary key for each license, generated as a hash
+          of authority and license number.
+      bl:
+        type: string
+        description: 'The official business license number (BL #).'
+      bl_cbls:
+        type: string
+        description: The CBLS number of the business license.
+      emirate_name_en:
+        type: string
+        description: The English name of the Emirate where the license is registered.
+      emirate_name_ar:
+        type: string
+        description: The Arabic name of the Emirate where the license is registered.
+      issuance_authority_en:
+        type: string
+        description: The English name of the license issuing authority.
+      issuance_authority_ar:
+        type: string
+        description: The Arabic name of the license issuing authority.
+      issuance_authority_branch_en:
+        type: string
+        description: The English name of the issuing authority's branch.
+      issuance_authority_branch_ar:
+        type: string
+        description: The Arabic name of the issuing authority's branch.
+      bl_status_en:
+        type: string
+        description: The current status of the business license (e.g., Active, Expired).
+      bl_status_ar:
+        type: string
+        description: The current status of the business license in Arabic.
+      bl_name_en:
+        type: string
+        description: The English name of the business on the license.
+      bl_name_ar:
+        type: string
+        description: The Arabic name of the business on the license.
+      bl_legal_type_en:
+        type: string
+        description: The legal type of the business entity.
+      bl_legal_type_ar:
+        type: string
+        description: The legal type of the business entity in Arabic.
+      bl_est_date:
+        type: string
+        description: The establishment date of the license as a raw string.
+      bl_exp_date:
+        type: string
+        description: The expiration date of the license as a raw string.
+      bl_type_en:
+        type: string
+        description: The type of business license in English (e.g., Commercial, Professional).
+      bl_type_ar:
+        type: string
+        description: The type of business license in Arabic.
+      license_branch_flag:
+        type: string
+        description: A flag indicating if the license is for a branch ('Y' or 'N').
+  source:
+    code: "SELECT *\nFROM {{ schema }}.dim_licenses\nWHERE 1=1\n{% if ParentLicenceLicenseNumber\
+      \ %}\n  AND parent_licence_license_number ILIKE '%' || $ParentLicenceLicenseNumber\
+      \ || '%'\n{% endif %}\n{% if BusinessActivityCode %}\n  AND business_activity_code\
+      \ ILIKE '%' || $BusinessActivityCode || '%'\n{% endif %}\n{% if LicenseBranchFlag\
+      \ %}\n  AND license_branch_flag = $LicenseBranchFlag\n{% endif %}\nORDER BY\
+      \ parent_licence_license_number\nLIMIT 100"
+  enabled: true

@@ -6,6 +6,7 @@ tool:
   - name: LicenseBranchFlag
     type: string
     description: Filter by LicenseBranchFlag
+    required: false
   return:
     type: array
     items:
@@ -74,6 +75,7 @@ tool:
           type: string
           description: A flag indicating if the license is for a branch ('Y' or 'N').
   source:
-    code: "SELECT *\nFROM dim_licenses\nWHERE 1=1\n  AND ($LicenseBranchFlag IS NULL\
-      \ OR license_branch_flag = $LicenseBranchFlag)\nORDER BY parent_licence_license_number"
+    code: "SELECT *\nFROM {{ schema }}.dim_licenses\nWHERE 1=1\n{% if LicenseBranchFlag\
+      \ is defined %}\n  AND license_branch_flag = $LicenseBranchFlag\n{% endif %}\n\
+      ORDER BY parent_licence_license_number"
   enabled: true

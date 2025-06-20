@@ -1,7 +1,8 @@
 mxcp: 1.0.0
 tool:
   name: "categorical_license_values"
-  description: "Get the distinct values for a given categorical field in the licenses dataset."
+  description: |
+    Provides comprehensive categorical information about UAE business licenses
   tags: ["categorical", "licenses", "uae", "metadata"]
   annotations:
     title: "Categorical License Values"
@@ -41,7 +42,7 @@ tool:
         value: { type: string }
   source:
     file: "categorical_license_values.sql"
-  enabled: true
+  enabled: false
   policies:
     input:
       - condition: >-

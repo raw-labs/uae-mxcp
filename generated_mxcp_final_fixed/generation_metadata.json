@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generation_timestamp": "2025-06-20T22:03:56.990656",
+  "generation_timestamp": "2025-06-20T21:58:02.435474",
   "dbt_manifest": "target/manifest.json",
   "statistics": {
     "entities_detected": 1,

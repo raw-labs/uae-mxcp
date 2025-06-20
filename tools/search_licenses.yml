@@ -186,7 +186,7 @@ tool:
         lon_dd: { type: number }
   source:
     file: "search_licenses.sql"
-  enabled: true
+  enabled: false
   # tests:
   #   - name: "basic"
   #     arguments:

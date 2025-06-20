@@ -99,7 +99,7 @@ tool:
         distinct_count: { type: integer }
   source:
     file: "timeseries_licenses.sql"
-  enabled: true
+  enabled: false
   policies:
     input:
       - condition: >-

@@ -1,8 +1,14 @@
 mxcp: 1.0.0
 tool:
-  name: filter_licenses_by_status
-  description: Filter licenses records by status fields
+  name: find_licenses
+  description: Search for licenses records with intelligent filtering
   parameters:
+  - name: ParentLicenceLicenseNumber
+    type: string
+    description: Search by ParentLicenceLicenseNumber (partial match supported)
+  - name: BusinessActivityCode
+    type: string
+    description: Search by BusinessActivityCode (partial match supported)
   - name: LicenseBranchFlag
     type: string
     description: Filter by LicenseBranchFlag
@@ -74,6 +80,10 @@ tool:
           type: string
           description: A flag indicating if the license is for a branch ('Y' or 'N').
   source:
-    code: "SELECT *\nFROM dim_licenses\nWHERE 1=1\n  AND ($LicenseBranchFlag IS NULL\
-      \ OR license_branch_flag = $LicenseBranchFlag)\nORDER BY parent_licence_license_number"
+    code: "SELECT *\nFROM {{ schema }}.dim_licenses\nWHERE 1=1\n{% if ParentLicenceLicenseNumber\
+      \ %}\n  AND parent_licence_license_number ILIKE '%' || $ParentLicenceLicenseNumber\
+      \ || '%'\n{% endif %}\n{% if BusinessActivityCode %}\n  AND business_activity_code\
+      \ ILIKE '%' || $BusinessActivityCode || '%'\n{% endif %}\n{% if LicenseBranchFlag\
+      \ %}\n  AND license_branch_flag = $LicenseBranchFlag\n{% endif %}\nORDER BY\
+      \ parent_licence_license_number\nLIMIT 100"
   enabled: true

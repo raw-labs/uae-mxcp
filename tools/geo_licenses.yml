@@ -101,7 +101,7 @@ tool:
         bl_type_en: { type: string }
   source:
     file: "geo_licenses.sql"
-  enabled: true
+  enabled: false
   policies:
     output:
       - condition: "user.role == 'guest'"
