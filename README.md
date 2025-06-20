@@ -108,19 +108,33 @@ The project is designed to work with any compatible CSV file.
 > 1.  **Schema Tests:** Defined in `.yml` files (e.g., `not_null`).
 > 2.  **Custom Data Tests:** Custom SQL queries in the `tests/` directory that check for complex business rules. `dbt test` runs both types automatically.
 
-### Project Structure
-
-- `docs/`: Project documentation, including this README.
-- `models/`: The core dbt models for data transformation.
-- `prompts/`: LLM prompt definitions for the MXCP server.
-- `resources/`: MXCP resource definitions.
-- `scripts/`: Helper scripts for data generation and downloading.
-- `seeds/`: **Source Data Directory**. Holds the source CSV files.
-- `tests/`: Custom dbt data tests written in SQL.
-- `tools/`: The main MXCP tool definitions and their underlying SQL queries.
-- `start-mcp.sh`: A wrapper script for starting the server with clean output.
-
 ---
+
+## Project Structure and Key Files
+
+This table provides a map of the repository to help you navigate the codebase.
+
+| Path                          | Description                                                                                                                             |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                   | **You are here.** The main entry point and guide for the project.                                                                       |
+| `.cursor/`                    | **AI Assistant Configuration.** Contains rules and instructions for the AI assistant (e.g., Cursor) to ensure consistent behavior.        |
+| `models/`                     | **dbt Models.** The core data transformation logic, organized into `staging` and `marts` layers.                                        |
+| `seeds/`                      | **Source Data.** Holds the source CSV files. This project reads directly from this directory; it does **not** use `dbt seed`.             |
+| `tests/`                      | **Custom dbt Tests.** Contains custom data tests written in SQL to enforce complex business rules.                                      |
+| `tools/`                      | **MXCP Tools.** The primary API endpoints for querying data, defined in YAML and backed by SQL.                                         |
+| `resources/` & `prompts/`     | Additional MXCP endpoint definitions for metadata and LLM prompts.                                                                      |
+| `scripts/`                    | Helper scripts for generating synthetic data and downloading the real dataset.                                                          |
+| `start-mcp.sh`                | A wrapper script to start the MXCP server with clean stdio output, ideal for LLM integration.                                           |
+| `dbt_project.yml`             | The main configuration file for the dbt project.                                                                                        |
+| `mxcp-site.yml`               | The main configuration file for the MXCP server.                                                                                        |
+
+## Development Notes
+
+### AI-Assisted Development
+
+This project is configured for development with an AI assistant like Cursor. The `.cursor/` directory contains a rulebook (`MXCP_PROJECT_ASSISTANT.md`) that defines the project's specific protocols and design principles.
+
+By committing these rules to the repository, we ensure that the AI assistant's behavior is consistent and reproducible for any developer working on the project.
 
 ### LLM Integration (Claude Desktop)
 
