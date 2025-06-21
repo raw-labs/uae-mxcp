@@ -1,6 +1,6 @@
 # UAE Business Licenses - MXCP Project
 
-This project provides a full-stack, enterprise-ready MXCP server for querying and analyzing a dataset of UAE business licenses. It features a dbt-powered data pipeline, robust data quality testing, and a suite of pre-built tools for search, aggregation, and geospatial analysis.
+This project provides a full-stack, enterprise-ready MXCP server for querying and analyzing a dataset of UAE business licenses. It features a dbt-powered data pipeline, robust data quality testing, automated tool generation from dbt models, and a comprehensive suite of pre-built tools for search, aggregation, and analysis.
 
 ---
 
@@ -13,10 +13,11 @@ This repository is a complete, self-contained solution for turning a raw CSV dat
 | Feature                  | Description                                                                                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **dbt Data Pipeline**    | Uses dbt to transform raw CSV data into a clean, analytics-ready data model in a local DuckDB database.                                      |
-| **Robust Data Testing**  | Includes 17+ data tests (both schema and custom SQL tests) to ensure data quality and integrity.                                           |
-| **MXCP Tools**           | Provides a suite of tools for searching, aggregating, and analyzing license data.                                                          |
-| **Synthetic Data**       | Comes with a `seeds/licenses_sample.csv` and a script to generate larger, realistic datasets for development and testing.                    |
-| **Role-Based Policies**  | Demonstrates data masking and access control policies for different user roles (e.g., `guest` vs. `admin`).                                  |
+| **Robust Data Testing**  | Includes 20+ data tests (both schema and custom SQL tests) to ensure data quality and integrity.                                           |
+| **Automated Tool Generation** | Python framework that automatically generates MXCP tools from dbt models with semantic analysis.                                       |
+| **5 Pre-built Tools**    | Comprehensive search, aggregation, time series, geographic, and categorical analysis tools.                                                |
+| **Separate SQL Files**   | Clean architecture with all SQL queries in separate files for better maintainability.                                                      |
+| **Model Versioning**     | dbt model versioning support with contracts for backward compatibility.                                                                    |
 | **LLM Integration Ready**| Includes a clean server startup script (`start-mcp.sh`) for easy integration with platforms like Claude Desktop.                           |
 
 ---
@@ -43,18 +44,21 @@ This repository is a complete, self-contained solution for turning a raw CSV dat
 
 ## Usage: A Step-by-Step Workflow
 
-This workflow guides you through setting up the database and running the server using the default sample data.
+This workflow guides you through setting up the database and running the server.
 
 ### Step 1: Build the Database
 
 The core of this project is its dbt pipeline, which reads a source CSV file and builds a DuckDB database (`db-prod.duckdb`).
 
 ```bash
-# Build all models using the default sample file
+# Build all models using the full dataset
+dbt run --vars '{"licenses_file": "seeds/licenses.csv"}'
+
+# Or use the sample file for development
 dbt run --vars '{"licenses_file": "seeds/licenses_sample.csv"}'
 ```
 
-This command tells dbt to execute all models, using the `licenses_file` variable to find the source data.
+This creates the versioned table `dim_licenses_v1` with 3.19M records (or 1,000 for the sample).
 
 ### Step 2: Run Data Quality Tests
 
@@ -62,11 +66,23 @@ After building the database, run the test suite to ensure the data is clean and 
 
 ```bash
 # Test the models against the loaded data
-dbt test --vars '{"licenses_file": "seeds/licenses_sample.csv"}'
+dbt test --vars '{"licenses_file": "seeds/licenses.csv"}'
 ```
-This command executes all 17+ tests, including schema tests and the custom SQL tests found in the `tests/` directory.
 
-### Step 3: Start the MXCP Server
+### Step 3: Generate MXCP Tools (Optional)
+
+The project includes an automated tool generation framework that creates MXCP tools from your dbt models:
+
+```bash
+# Generate tools from dbt manifest
+python generate_mxcp_tools.py --manifest target/manifest.json --output generated_tools
+
+# Copy generated tools to project
+cp generated_tools/tools/*.yml tools/
+cp generated_tools/sql/*.sql sql/
+```
+
+### Step 4: Start the MXCP Server
 
 With a clean, tested database, you can now start the MXCP server to expose the query tools.
 
@@ -80,94 +96,116 @@ mxcp serve
 
 ---
 
+## MXCP Tools
+
+The project includes 5 comprehensive tools, all querying the versioned table `dim_licenses_v1`:
+
+### 1. **find_licenses** (`tools/find_licenses.yml`)
+Comprehensive search tool with filters for ALL 40+ columns including:
+- Text search with partial matching (ILIKE) for names, addresses, descriptions
+- Exact matching for categorical fields (status, type, flags)
+- Date range filters for temporal fields
+- Min/max filters for numeric fields
+- Pagination support
+
+### 2. **aggregate_licenses** (`tools/aggregate_licenses.yml`)
+Dynamic aggregation tool supporting:
+- Group by ANY combination of 36 categorical/string fields
+- Common filters for data subsetting
+- Returns counts and unique license counts
+
+### 3. **timeseries_licenses** (`tools/timeseries_licenses.yml`)
+Time series analysis tool:
+- Analyze trends by establishment or expiration dates
+- Configurable granularity (day, week, month, quarter, year)
+- Date range filtering
+- Additional categorical filters
+
+### 4. **geo_licenses** (`tools/geo_licenses.yml`)
+Geographic analysis tool:
+- Group by emirate, authority, or address
+- Coordinate statistics (avg, min, max lat/lon)
+- Bounding box filtering
+- Full filter support
+
+### 5. **list_licenses_categories** (`tools/list_licenses_categories.yml`)
+Categorical value exploration:
+- List distinct values for any categorical field
+- Optional counts for each value
+- Useful for building dynamic UIs
+
+---
+
 ## Advanced Topics
 
-### Working with Different Data Files
+### Tool Generation Framework
 
-The project is designed to work with any compatible CSV file.
+The `mxcp_generator` package provides automated tool generation from dbt models:
 
--   **To generate a larger synthetic file:**
-    ```bash
-    ./scripts/generate_synthetic_data.py --output seeds/licenses_large_sample.csv --sample-size 10000
-    ```
-    Then run `dbt run` and `dbt test` with `--vars '{"licenses_file": "seeds/licenses_large_sample.csv"}'`.
+```bash
+# Components
+mxcp_generator/
+├── analyzers/          # Semantic analysis of dbt models
+├── generators/         # Tool, resource, and prompt generators
+├── utils/             # dbt manifest parsing
+└── core.py            # Main orchestration
 
--   **To use the real dataset (requires AWS access):**
-    ```bash
-    ./scripts/download_real_data.py --output seeds/licenses.csv
-    ```
-    Then run `dbt run` and `dbt test` with `--vars '{"licenses_file": "seeds/licenses.csv"}'`.
+# Key features:
+- Semantic column classification (identifier, temporal, geographic, etc.)
+- Intelligent filter generation based on data types
+- Separate SQL file generation for maintainability
+- Test generation for all tools
+```
+
+### SQL File Organization
+
+All SQL queries are stored separately in the `sql/` directory:
+- **Better maintainability** - SQL can be edited independently
+- **Syntax highlighting** - Editors properly highlight `.sql` files
+- **Version control** - Cleaner diffs for SQL changes
+- **Reusability** - SQL files can be shared between tools
 
 ### Key Project Concepts
 
 > #### Data Loading: No `dbt seed`
-> This project **does not** use the `dbt seed` command. Instead, the staging models read CSV files directly from the `seeds/` directory using DuckDB's `read_csv_auto` function. This is a deliberate design choice for performance and flexibility.
+> This project **does not** use the `dbt seed` command. Instead, the staging models read CSV files directly using DuckDB's `read_csv_auto` function with the path passed as a dbt variable.
 
-> #### Data Testing: Schema and Custom Tests
-> The project uses two types of dbt tests:
-> 1.  **Schema Tests:** Defined in `.yml` files (e.g., `not_null`).
-> 2.  **Custom Data Tests:** Custom SQL queries in the `tests/` directory that check for complex business rules. `dbt test` runs both types automatically.
+> #### Model Versioning
+> All models use dbt's versioning feature. The current version creates tables with `_v1` suffix (e.g., `dim_licenses_v1`). When breaking changes are needed, increment the version in `schema.yml`.
 
-### dbt Model Versioning and Contracts
-
-**Model Versioning:**
-- All dbt models in this project are versioned using the `version:` key in their `schema.yml` definition (e.g., `version: 1`).
-- When a breaking change is needed, a new version (e.g., `version: 2`) should be created, and the old version can be maintained for backward compatibility.
-- Version tags (e.g., `tags: [marts, v1]`) are also used for discoverability and automation.
-
-**Model Contracts:**
-- Contracts are enabled for all marts models (e.g., `dim_licenses`) using `contract={"enforced": True}` in the model's config block.
-- Contracts ensure that the model's output matches the schema defined in `schema.yml` (column names, types, and nullability).
-- If the model output does not match the contract, dbt will raise an error during `dbt run` or `dbt build`.
-- **Contracts are NOT enforced in staging models** to allow for more flexibility during data ingestion and transformation.
-
-**Example:**
-```yaml
-# models/marts/schema.yml
-models:
-  - name: dim_licenses
-    version: 1
-    tags: [marts, v1]
-    columns:
-      - name: license_pk
-        data_type: string
-        description: "The unique primary key for each license."
-        tests: [not_null]
-      # ...
-```
-```jinja
--- models/marts/dim_licenses.sql
-{{ config(materialized='table', tags=['marts', 'v1'], contract={"enforced": True}) }}
-SELECT ...
-```
+> #### Contracts
+> All mart models have enforced contracts to ensure schema stability. If the model output doesn't match the contract, dbt will raise an error.
 
 ---
 
 ## Project Structure and Key Files
 
-This table provides a map of the repository to help you navigate the codebase.
-
 | Path                          | Description                                                                                                                             |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `README.md`                   | **You are here.** The main entry point and guide for the project.                                                                       |
-| `.cursor/`                    | **AI Assistant Configuration.** Contains rules and instructions for the AI assistant (e.g., Cursor) to ensure consistent behavior.        |
-| `models/`                     | **dbt Models.** The core data transformation logic, organized into `staging` and `marts` layers.                                        |
-| `seeds/`                      | **Source Data.** Holds the source CSV files. This project reads directly from this directory; it does **not** use `dbt seed`.             |
-| `tests/`                      | **Custom dbt Tests.** Contains custom data tests written in SQL to enforce complex business rules.                                      |
-| `tools/`                      | **MXCP Tools.** The primary API endpoints for querying data, defined in YAML and backed by SQL.                                         |
-| `resources/` & `prompts/`     | Additional MXCP endpoint definitions for metadata and LLM prompts.                                                                      |
-| `scripts/`                    | Helper scripts for generating synthetic data and downloading the real dataset.                                                          |
-| `start-mcp.sh`                | A wrapper script to start the MXCP server with clean stdio output, ideal for LLM integration.                                           |
-| `dbt_project.yml`             | The main configuration file for the dbt project.                                                                                        |
-| `mxcp-site.yml`               | The main configuration file for the MXCP server.                                                                                        |
+| `.cursor/`                    | **AI Assistant Configuration.** Contains MXCP_PROJECT_ASSISTANT.md with project rules.                                                  |
+| `models/`                     | **dbt Models.** Core data transformation logic (`staging/` and `marts/`).                                                              |
+| `seeds/`                      | **Source Data.** CSV files read directly by staging models (no `dbt seed`).                                                            |
+| `tests/`                      | **Custom dbt Tests.** SQL tests for complex business rules.                                                                             |
+| `tools/`                      | **MXCP Tool Definitions.** YAML files defining API endpoints.                                                                           |
+| `sql/`                        | **SQL Queries.** All SQL logic separated from YAML definitions.                                                                         |
+| `mxcp_generator/`             | **Tool Generation Framework.** Python package for auto-generating tools.                                                                |
+| `docs/design/`                | **Design Documentation.** Architecture decisions and strategies.                                                                        |
+| `scripts/`                    | Helper scripts for data generation and analysis.                                                                                        |
+| `dbt_project.yml`             | Main dbt configuration.                                                                                                                 |
+| `mxcp-site.yml`               | Main MXCP server configuration.                                                                                                        |
+
+---
 
 ## Development Notes
 
 ### AI-Assisted Development
 
-This project is configured for development with an AI assistant like Cursor. The `.cursor/` directory contains a rulebook (`MXCP_PROJECT_ASSISTANT.md`) that defines the project's specific protocols and design principles.
-
-By committing these rules to the repository, we ensure that the AI assistant's behavior is consistent and reproducible for any developer working on the project.
+This project follows the AI Change Protocol (AICP) defined in `.cursor/MXCP_PROJECT_ASSISTANT.md`. Key principles:
+1. Always verify git status before changes
+2. Run tests before and after modifications
+3. Maintain 90%+ test coverage for mart models
+4. Document all changes
 
 ### LLM Integration (Claude Desktop)
 
@@ -180,7 +218,7 @@ To integrate with Claude Desktop, add the following to your configuration:
       "command": "bash",
       "args": [
         "-c",
-        "cd /path/to/uae-mxcp && ./start-mcp.sh --role guest"
+        "cd /path/to/uae-mxcp && ./start-mcp.sh"
       ],
       "env": {
         "PATH": "/path/to/uae-mxcp/.env/bin:/usr/local/bin:/usr/bin",
@@ -190,6 +228,15 @@ To integrate with Claude Desktop, add the following to your configuration:
   }
 }
 ```
-> **Note:** The `--role` flag is for demonstration purposes. Role-based access control policies are defined in the tool YAMLs but require a proxy layer to enforce.
 
 Replace `/path/to/uae-mxcp` and `/home/your-username` with your local paths.
+
+---
+
+## Recent Updates
+
+- **Tool Generation Framework**: Automated generation of MXCP tools from dbt models
+- **SQL Separation**: All SQL queries moved to `sql/` directory
+- **5 Comprehensive Tools**: Search, aggregate, timeseries, geographic, and categorical analysis
+- **Enhanced Filters**: All tools support comprehensive filtering options
+- **Model Versioning**: Using dbt versioned models (`dim_licenses_v1`)
