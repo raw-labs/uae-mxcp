@@ -1,36 +1,44 @@
 SELECT
-  CAST(date_trunc(
-    $interval,
-    CASE
-      WHEN $date_field = 'bl_est_date_d' THEN bl_est_date_d
-      WHEN $date_field = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE NULL
+  DATE_TRUNC($granularity, 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
     END
-  ) AS VARCHAR) AS period,
-  CASE WHEN strpos($metrics, 'count') > 0 THEN COUNT(*) END AS count,
-  CASE WHEN strpos($metrics, 'distinct_count') > 0 THEN COUNT(DISTINCT license_pk) END AS distinct_count
-FROM dim_licenses
-WHERE 1=1
-  AND ($emirate_name_en IS NULL OR emirate_name_en = $emirate_name_en)
-  AND ($emirate_name_en_like IS NULL OR emirate_name_en ILIKE '%' || $emirate_name_en_like || '%')
-  AND ($emirate_name_ar IS NULL OR emirate_name_ar = $emirate_name_ar)
-  AND ($emirate_name_ar_like IS NULL OR emirate_name_ar ILIKE '%' || $emirate_name_ar_like || '%')
-  AND ($issuance_authority_en IS NULL OR issuance_authority_en = $issuance_authority_en)
-  AND ($issuance_authority_en_like IS NULL OR issuance_authority_en ILIKE '%' || $issuance_authority_en_like || '%')
-  AND ($issuance_authority_ar IS NULL OR issuance_authority_ar = $issuance_authority_ar)
-  AND ($issuance_authority_ar_like IS NULL OR issuance_authority_ar ILIKE '%' || $issuance_authority_ar_like || '%')
-  AND ($bl IS NULL OR bl = $bl)
-  AND ($bl_like IS NULL OR bl ILIKE '%' || $bl_like || '%')
-  AND ($bl_status_en IS NULL OR bl_status_en = $bl_status_en)
-  AND ($bl_type_en IS NULL OR bl_type_en = $bl_type_en)
-  AND ($bl_legal_type_en IS NULL OR bl_legal_type_en = $bl_legal_type_en)
-  AND ($owner_nationality_en IS NULL OR owner_nationality_en = $owner_nationality_en)
-  AND ($relationship_type_en IS NULL OR relationship_type_en = $relationship_type_en)
-  AND ($bl_est_date_d_from IS NULL OR bl_est_date_d >= $bl_est_date_d_from)
-  AND ($bl_est_date_d_to IS NULL OR bl_est_date_d <= $bl_est_date_d_to)
-  AND ($bl_exp_date_d_from IS NULL OR bl_exp_date_d >= $bl_exp_date_d_from)
-  AND ($bl_exp_date_d_to IS NULL OR bl_exp_date_d <= $bl_exp_date_d_to)
-  -- add more filters as needed from search_licenses.sql
+  ) as period,
+  COUNT(*) as count,
+  COUNT(DISTINCT license_pk) as unique_licenses
+FROM dim_licenses_v1
+WHERE CASE 
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+    ELSE bl_est_date_d
+  END IS NOT NULL
+  AND ($startDate IS NULL OR 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
+    END >= $startDate::DATE)
+  AND ($endDate IS NULL OR 
+    CASE 
+      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
+      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
+      ELSE bl_est_date_d
+    END <= $endDate::DATE)
+  AND ($filterLicensePk IS NULL OR license_pk = $filterLicensePk)
+  AND ($filterBl IS NULL OR bl = $filterBl)
+  AND ($filterCbls IS NULL OR bl_cbls = $filterCbls)
+  AND ($filterEmirateNameEn IS NULL OR emirate_name_en = $filterEmirateNameEn)
+  AND ($filterEmirateNameAr IS NULL OR emirate_name_ar = $filterEmirateNameAr)
+  AND ($filterIssuanceAuthorityEn IS NULL OR issuance_authority_en = $filterIssuanceAuthorityEn)
+  AND ($filterIssuanceAuthorityAr IS NULL OR issuance_authority_ar = $filterIssuanceAuthorityAr)
+  AND ($filterIssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en = $filterIssuanceAuthorityBranchEn)
+  AND ($filterIssuanceAuthorityBranchAr IS NULL OR issuance_authority_branch_ar = $filterIssuanceAuthorityBranchAr)
+  AND ($filterStatusEn IS NULL OR bl_status_en = $filterStatusEn)
+  AND ($EstDateFrom IS NULL OR bl_est_date_d >= $EstDateFrom::DATE)
+  AND ($EstDateTo IS NULL OR bl_est_date_d <= $EstDateTo::DATE)
+  AND ($ExpDateFrom IS NULL OR bl_exp_date_d >= $ExpDateFrom::DATE)
+  AND ($ExpDateTo IS NULL OR bl_exp_date_d <= $ExpDateTo::DATE)
 GROUP BY period
-ORDER BY period
-LIMIT $page_size OFFSET (($page - 1) * $page_size); 
+ORDER BY period DESC

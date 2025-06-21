@@ -1,73 +1,64 @@
 SELECT
-  license_pk,
-  emirate_name_en,
-  emirate_name_ar,
-  issuance_authority_en,
-  issuance_authority_ar,
-  issuance_authority_branch_en,
-  issuance_authority_branch_ar,
-  bl,
-  bl_cbls,
-  bl_name_ar,
-  bl_name_en,
-  bl_est_date,
-  bl_exp_date,
-  bl_status_en,
-  bl_status_ar,
-  bl_legal_type_en,
-  bl_legal_type_ar,
-  bl_type_en,
-  bl_type_ar,
-  bl_full_address,
-  license_latitude,
-  license_longitude,
-  license_branch_flag,
-  parent_licence_license_number,
-  parent_license_issuance_authority_en,
-  parent_license_issuance_authority_ar,
-  relationship_type_en,
-  relationship_type_ar,
-  owner_nationality_en,
-  owner_nationality_ar,
-  owner_gender,
-  business_activity_code,
-  business_activity_desc_en,
-  business_activity_desc_ar,
-  license_latitude_1,
-  license_longitude_1,
-  CAST(bl_est_date_d AS VARCHAR) AS bl_est_date_d,
-  CAST(bl_exp_date_d AS VARCHAR) AS bl_exp_date_d,
-  NULLIF(lat_dd, 'nan') AS lat_dd,
-  NULLIF(lon_dd, 'nan') AS lon_dd
-FROM dim_licenses
-WHERE 1=1
-  AND ($emirate_name_en IS NULL OR emirate_name_en = $emirate_name_en)
-  AND ($emirate_name_en_like IS NULL OR emirate_name_en ILIKE '%' || $emirate_name_en_like || '%')
-  AND ($emirate_name_ar IS NULL OR emirate_name_ar = $emirate_name_ar)
-  AND ($emirate_name_ar_like IS NULL OR emirate_name_ar ILIKE '%' || $emirate_name_ar_like || '%')
-  AND ($issuance_authority_en IS NULL OR issuance_authority_en = $issuance_authority_en)
-  AND ($issuance_authority_en_like IS NULL OR issuance_authority_en ILIKE '%' || $issuance_authority_en_like || '%')
-  AND ($issuance_authority_ar IS NULL OR issuance_authority_ar = $issuance_authority_ar)
-  AND ($issuance_authority_ar_like IS NULL OR issuance_authority_ar ILIKE '%' || $issuance_authority_ar_like || '%')
-  AND ($bl IS NULL OR bl = $bl)
-  AND ($bl_like IS NULL OR bl ILIKE '%' || $bl_like || '%')
-  AND ($bl_status_en IS NULL OR bl_status_en = $bl_status_en)
-  AND ($bl_type_en IS NULL OR bl_type_en = $bl_type_en)
-  AND ($bl_legal_type_en IS NULL OR bl_legal_type_en = $bl_legal_type_en)
-  AND ($owner_nationality_en IS NULL OR owner_nationality_en = $owner_nationality_en)
-  AND ($relationship_type_en IS NULL OR relationship_type_en = $relationship_type_en)
-  AND ($bl_est_date_d_from IS NULL OR bl_est_date_d >= $bl_est_date_d_from)
-  AND ($bl_est_date_d_to IS NULL OR bl_est_date_d <= $bl_est_date_d_to)
-  AND ($bl_exp_date_d_from IS NULL OR bl_exp_date_d >= $bl_exp_date_d_from)
-  AND ($bl_exp_date_d_to IS NULL OR bl_exp_date_d <= $bl_exp_date_d_to)
-  AND (
-    $bbox IS NULL OR (
-      lat_dd IS NOT NULL AND lon_dd IS NOT NULL AND
-      lon_dd >= split_part($bbox, ',', 1)::DOUBLE AND
-      lat_dd >= split_part($bbox, ',', 2)::DOUBLE AND
-      lon_dd <= split_part($bbox, ',', 3)::DOUBLE AND
-      lat_dd <= split_part($bbox, ',', 4)::DOUBLE
-    )
-  )
-ORDER BY bl_est_date_d DESC
-LIMIT $page_size OFFSET (($page - 1) * $page_size); 
+  CASE 
+    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
+    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
+    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
+    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
+    ELSE emirate_name_en
+  END as location,
+  COUNT(*) as count,
+  COUNT(DISTINCT license_pk) as unique_licenses,
+  CASE 
+    WHEN $includeCoordinates THEN AVG(lat_dd)
+    ELSE NULL
+  END as avg_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN AVG(lon_dd)
+    ELSE NULL
+  END as avg_longitude,
+  CASE 
+    WHEN $includeCoordinates THEN MIN(lat_dd)
+    ELSE NULL
+  END as min_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN MAX(lat_dd)
+    ELSE NULL
+  END as max_latitude,
+  CASE 
+    WHEN $includeCoordinates THEN MIN(lon_dd)
+    ELSE NULL
+  END as min_longitude,
+  CASE 
+    WHEN $includeCoordinates THEN MAX(lon_dd)
+    ELSE NULL
+  END as max_longitude
+FROM dim_licenses_v1
+WHERE CASE 
+    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
+    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
+    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
+    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
+    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
+    ELSE emirate_name_en
+  END IS NOT NULL
+  AND ($filterLicensePk IS NULL OR license_pk = $filterLicensePk)
+  AND ($filterBl IS NULL OR bl = $filterBl)
+  AND ($filterCbls IS NULL OR bl_cbls = $filterCbls)
+  AND ($filterEmirateNameEn IS NULL OR emirate_name_en = $filterEmirateNameEn)
+  AND ($filterEmirateNameAr IS NULL OR emirate_name_ar = $filterEmirateNameAr)
+  AND ($filterIssuanceAuthorityEn IS NULL OR issuance_authority_en = $filterIssuanceAuthorityEn)
+  AND ($filterIssuanceAuthorityAr IS NULL OR issuance_authority_ar = $filterIssuanceAuthorityAr)
+  AND ($filterIssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en = $filterIssuanceAuthorityBranchEn)
+  AND ($filterIssuanceAuthorityBranchAr IS NULL OR issuance_authority_branch_ar = $filterIssuanceAuthorityBranchAr)
+  AND ($filterStatusEn IS NULL OR bl_status_en = $filterStatusEn)
+  AND ($EstDateFrom IS NULL OR bl_est_date_d >= $EstDateFrom::DATE)
+  AND ($EstDateTo IS NULL OR bl_est_date_d <= $EstDateTo::DATE)
+  AND ($ExpDateFrom IS NULL OR bl_exp_date_d >= $ExpDateFrom::DATE)
+  AND ($ExpDateTo IS NULL OR bl_exp_date_d <= $ExpDateTo::DATE)
+  AND ($boundingBox.minLat IS NULL OR lat_dd >= $boundingBox.minLat)
+  AND ($boundingBox.maxLat IS NULL OR lat_dd <= $boundingBox.maxLat)
+  AND ($boundingBox.minLon IS NULL OR lon_dd >= $boundingBox.minLon)
+  AND ($boundingBox.maxLon IS NULL OR lon_dd <= $boundingBox.maxLon)
+GROUP BY location
+ORDER BY count DESC

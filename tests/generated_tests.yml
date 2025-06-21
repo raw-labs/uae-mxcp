@@ -1,0 +1,206 @@
+tests:
+- name: test_find_licenses_basic
+  tool: find_licenses
+  description: Basic functionality test for find_licenses
+  params:
+    LicensePk: test_value
+    Bl: test_value
+    Cbls: test_value
+    EmirateNameEn: test_value
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    StatusEn: test_value
+    StatusAr: test_value
+    NameEn: test_value
+    NameAr: test_value
+    LegalTypeEn: test_value
+    LegalTypeAr: test_value
+    EstDateFrom: test_value
+    EstDateTo: test_value
+    ExpDateFrom: test_value
+    ExpDateTo: test_value
+    TypeEn: test_value
+    TypeAr: test_value
+    LicenseBranchFlag: test_value
+    FullAddress: test_value
+    ParentLicenceLicenseNumber: test_value
+    ParentLicenseIssuanceAuthorityEn: test_value
+    ParentLicenseIssuanceAuthorityAr: test_value
+    RelationshipTypeEn: test_value
+    RelationshipTypeAr: test_value
+    OwnerNationalityAr: test_value
+    OwnerGender: test_value
+    OwnerNationalityEn: test_value
+    BusinessActivityCode: test_value
+    BusinessActivityDescEn: test_value
+    BusinessActivityDescAr: test_value
+    LicenseLatitude: test_value
+    LicenseLongitude: test_value
+    LicenseLatitude1: test_value
+    LicenseLongitude1: test_value
+    EstDateDFrom: test_value
+    EstDateDTo: test_value
+    ExpDateDFrom: test_value
+    ExpDateDTo: test_value
+    limit: 1
+    offset: 1
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_find_licenses_invalid_params
+  tool: find_licenses
+  description: Invalid parameter test for find_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_aggregate_licenses_basic
+  tool: aggregate_licenses
+  description: Basic functionality test for aggregate_licenses
+  params:
+    groupByLicensePk: true
+    groupByBl: true
+    groupByCbls: true
+    groupByEmirateNameEn: true
+    groupByEmirateNameAr: true
+    groupByIssuanceAuthorityEn: true
+    groupByIssuanceAuthorityAr: true
+    groupByIssuanceAuthorityBranchEn: true
+    groupByIssuanceAuthorityBranchAr: true
+    groupByStatusEn: true
+    groupByStatusAr: true
+    groupByNameEn: true
+    groupByNameAr: true
+    groupByLegalTypeEn: true
+    groupByLegalTypeAr: true
+    groupByTypeEn: true
+    groupByTypeAr: true
+    groupByLicenseBranchFlag: true
+    groupByParentLicenseIssuanceAuthorityEn: true
+    groupByParentLicenseIssuanceAuthorityAr: true
+    groupByRelationshipTypeEn: true
+    groupByRelationshipTypeAr: true
+    groupByOwnerNationalityAr: true
+    groupByOwnerGender: true
+    groupByOwnerNationalityEn: true
+    groupByBusinessActivityDescEn: true
+    groupByBusinessActivityDescAr: true
+    groupByLicenseLatitude: true
+    groupByLicenseLongitude: true
+    groupByLicenseLatitude1: true
+    groupByLicenseLongitude1: true
+    groupByEstDate: true
+    groupByExpDate: true
+    groupByFullAddress: true
+    groupByParentLicenceLicenseNumber: true
+    groupByBusinessActivityCode: true
+    filterLicensePk: test_value
+    filterBl: test_value
+    filterCbls: test_value
+    filterEmirateNameEn: test_value
+    filterEmirateNameAr: test_value
+    filterIssuanceAuthorityEn: test_value
+    filterIssuanceAuthorityAr: test_value
+    filterIssuanceAuthorityBranchEn: test_value
+    filterIssuanceAuthorityBranchAr: test_value
+    filterStatusEn: test_value
+    EstDateFrom: test_value
+    EstDateTo: test_value
+    ExpDateFrom: test_value
+    ExpDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_aggregate_licenses_invalid_params
+  tool: aggregate_licenses
+  description: Invalid parameter test for aggregate_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_timeseries_licenses_basic
+  tool: timeseries_licenses
+  description: Basic functionality test for timeseries_licenses
+  params:
+    timeField: bl_est_date
+    granularity: day
+    startDate: test_value
+    endDate: test_value
+    filterLicensePk: test_value
+    filterBl: test_value
+    filterCbls: test_value
+    filterEmirateNameEn: test_value
+    filterEmirateNameAr: test_value
+    filterIssuanceAuthorityEn: test_value
+    filterIssuanceAuthorityAr: test_value
+    filterIssuanceAuthorityBranchEn: test_value
+    filterIssuanceAuthorityBranchAr: test_value
+    filterStatusEn: test_value
+    EstDateFrom: test_value
+    EstDateTo: test_value
+    ExpDateFrom: test_value
+    ExpDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_timeseries_licenses_invalid_params
+  tool: timeseries_licenses
+  description: Invalid parameter test for timeseries_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_geo_licenses_basic
+  tool: geo_licenses
+  description: Basic functionality test for geo_licenses
+  params:
+    groupByField: bl_full_address
+    includeCoordinates: true
+    filterLicensePk: test_value
+    filterBl: test_value
+    filterCbls: test_value
+    filterEmirateNameEn: test_value
+    filterEmirateNameAr: test_value
+    filterIssuanceAuthorityEn: test_value
+    filterIssuanceAuthorityAr: test_value
+    filterIssuanceAuthorityBranchEn: test_value
+    filterIssuanceAuthorityBranchAr: test_value
+    filterStatusEn: test_value
+    EstDateFrom: test_value
+    EstDateTo: test_value
+    ExpDateFrom: test_value
+    ExpDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_geo_licenses_invalid_params
+  tool: geo_licenses
+  description: Invalid parameter test for geo_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_list_licenses_categories_basic
+  tool: list_licenses_categories
+  description: Basic functionality test for list_licenses_categories
+  params:
+    field: license_pk
+    includeCount: true
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_list_licenses_categories_invalid_params
+  tool: list_licenses_categories
+  description: Invalid parameter test for list_licenses_categories
+  params:
+    invalid_param: test
+  expect_error: true

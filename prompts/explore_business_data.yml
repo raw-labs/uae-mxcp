@@ -16,9 +16,16 @@ prompt:
       ## Available Operations
 
 
-      - `find_licenses`: Search for licenses records with intelligent filtering
+      - `find_licenses`: Search and filter licenses records
 
-      - `filter_licenses_by_status`: Filter licenses records by status fields
+      - `aggregate_licenses`: Aggregate licenses data by various dimensions
+
+      - `timeseries_licenses`: Analyze licenses trends over time
+
+      - `geo_licenses`: Analyze licenses by geographic location
+
+      - `list_licenses_categories`: List distinct values for categorical fields in
+      licenses
 
 
       ## Common Questions You Can Answer

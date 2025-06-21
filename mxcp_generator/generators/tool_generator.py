@@ -574,6 +574,9 @@ ORDER BY total_count DESC
 LIMIT 100
         """.strip()
         
+        # Store SQL separately
+        self.sql_queries[tool_name] = sql
+        
         return {
             "mxcp": self.version,
             "tool": {
@@ -587,7 +590,7 @@ LIMIT 100
                     }
                 },
                 "source": {
-                    "code": sql
+                    "file": f"sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
@@ -677,6 +680,9 @@ WHERE CASE
 GROUP BY period
 ORDER BY period DESC
         """.strip()
+        
+        # Store SQL separately
+        self.sql_queries[tool_name] = sql
         
         return {
             "mxcp": self.version,
@@ -812,6 +818,9 @@ WHERE CASE
 GROUP BY location
 ORDER BY count DESC
         """.strip()
+        
+        # Store SQL separately
+        self.sql_queries[tool_name] = sql
         
         return {
             "mxcp": self.version,
