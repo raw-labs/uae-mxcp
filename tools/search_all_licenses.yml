@@ -258,46 +258,5 @@ tool:
           type: string
           description: A flag indicating if the license is for a branch ('Y' or 'N').
   source:
-    code: "SELECT *\nFROM dim_licenses_v1\nWHERE 1=1\n  AND ($LicensePk IS NULL OR license_pk\
-      \ = $LicensePk)\n  AND ($Bl IS NULL OR bl = $Bl)\n  AND ($Cbls IS NULL OR bl_cbls\
-      \ = $Cbls)\n  AND ($EmirateNameEn IS NULL OR emirate_name_en ILIKE '%' || $EmirateNameEn\
-      \ || '%')\n  AND ($EmirateNameAr IS NULL OR emirate_name_ar ILIKE '%' || $EmirateNameAr\
-      \ || '%')\n  AND ($IssuanceAuthorityEn IS NULL OR issuance_authority_en = $IssuanceAuthorityEn)\n\
-      \  AND ($IssuanceAuthorityAr IS NULL OR issuance_authority_ar = $IssuanceAuthorityAr)\n\
-      \  AND ($IssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en =\
-      \ $IssuanceAuthorityBranchEn)\n  AND ($IssuanceAuthorityBranchAr IS NULL OR\
-      \ issuance_authority_branch_ar = $IssuanceAuthorityBranchAr)\n  AND ($StatusEn\
-      \ IS NULL OR bl_status_en = $StatusEn)\n  AND ($StatusAr IS NULL OR bl_status_ar\
-      \ = $StatusAr)\n  AND ($NameEn IS NULL OR bl_name_en ILIKE '%' || $NameEn ||\
-      \ '%')\n  AND ($NameAr IS NULL OR bl_name_ar ILIKE '%' || $NameAr || '%')\n\
-      \  AND ($LegalTypeEn IS NULL OR bl_legal_type_en = $LegalTypeEn)\n  AND ($LegalTypeAr\
-      \ IS NULL OR bl_legal_type_ar = $LegalTypeAr)\n  AND ($EstDateFrom IS NULL OR\
-      \ bl_est_date >= $EstDateFrom)\n  AND ($EstDateTo IS NULL OR bl_est_date <=\
-      \ $EstDateTo)\n  AND ($ExpDateFrom IS NULL OR bl_exp_date >= $ExpDateFrom)\n\
-      \  AND ($ExpDateTo IS NULL OR bl_exp_date <= $ExpDateTo)\n  AND ($TypeEn IS\
-      \ NULL OR bl_type_en = $TypeEn)\n  AND ($TypeAr IS NULL OR bl_type_ar = $TypeAr)\n\
-      \  AND ($LicenseBranchFlag IS NULL OR license_branch_flag = $LicenseBranchFlag)\n\
-      \  AND ($FullAddress IS NULL OR bl_full_address ILIKE '%' || $FullAddress ||\
-      \ '%')\n  AND ($ParentLicenceLicenseNumber IS NULL OR parent_licence_license_number\
-      \ ILIKE '%' || $ParentLicenceLicenseNumber || '%')\n  AND ($ParentLicenseIssuanceAuthorityEn\
-      \ IS NULL OR parent_license_issuance_authority_en = $ParentLicenseIssuanceAuthorityEn)\n\
-      \  AND ($ParentLicenseIssuanceAuthorityAr IS NULL OR parent_license_issuance_authority_ar\
-      \ = $ParentLicenseIssuanceAuthorityAr)\n  AND ($RelationshipTypeEn IS NULL OR\
-      \ relationship_type_en = $RelationshipTypeEn)\n  AND ($RelationshipTypeAr IS\
-      \ NULL OR relationship_type_ar = $RelationshipTypeAr)\n  AND ($OwnerNationalityAr\
-      \ IS NULL OR owner_nationality_ar = $OwnerNationalityAr)\n  AND ($OwnerGender\
-      \ IS NULL OR owner_gender = $OwnerGender)\n  AND ($OwnerNationalityEn IS NULL\
-      \ OR owner_nationality_en = $OwnerNationalityEn)\n  AND ($BusinessActivityCode\
-      \ IS NULL OR business_activity_code ILIKE '%' || $BusinessActivityCode || '%')\n\
-      \  AND ($BusinessActivityDescEn IS NULL OR business_activity_desc_en ILIKE '%'\
-      \ || $BusinessActivityDescEn || '%')\n  AND ($BusinessActivityDescAr IS NULL\
-      \ OR business_activity_desc_ar ILIKE '%' || $BusinessActivityDescAr || '%')\n\
-      \  AND ($LicenseLatitude IS NULL OR license_latitude = $LicenseLatitude)\n \
-      \ AND ($LicenseLongitude IS NULL OR license_longitude = $LicenseLongitude)\n\
-      \  AND ($EstDateDFrom IS NULL OR bl_est_date_d >= $EstDateDFrom)\n  AND ($EstDateDTo\
-      \ IS NULL OR bl_est_date_d <= $EstDateDTo)\n  AND ($ExpDateDFrom IS NULL OR\
-      \ bl_exp_date_d >= $ExpDateDFrom)\n  AND ($ExpDateDTo IS NULL OR bl_exp_date_d\
-      \ <= $ExpDateDTo)\n  AND ($LatDd IS NULL OR lat_dd = $LatDd)\n  AND ($LonDd\
-      \ IS NULL OR lon_dd = $LonDd)\nORDER BY parent_licence_license_number DESC\n\
-      LIMIT $page_size OFFSET (($page - 1) * $page_size)"
+    file: sql/search_all_licenses.sql
   enabled: true
