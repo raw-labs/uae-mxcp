@@ -3,10 +3,12 @@ Core MXCP Generator functionality
 """
 
 import json
+import yaml
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
+from datetime import datetime
 
 from .analyzers import SemanticAnalyzer, BusinessEntity
 from .generators import ToolGenerator, ResourceGenerator, PromptGenerator
@@ -58,6 +60,13 @@ class MCPGenerator:
         # Load dbt manifest
         self.manifest = load_dbt_manifest(self.manifest_path)
         
+        # Initialize artifact storage
+        self.entities = {}
+        self.tools = []
+        self.resources = []
+        self.prompts = []
+        self.tests = []
+        
     def generate(self) -> GeneratedArtifacts:
         """
         Generate all MXCP artifacts from dbt models.
@@ -68,78 +77,118 @@ class MCPGenerator:
         logger.info(f"Starting MXCP generation from {self.manifest_path}")
         
         # 1. Analyze dbt models to extract business entities
-        entities = self.semantic_analyzer.extract_entities(self.manifest)
-        logger.info(f"Detected {len(entities)} business entities")
+        self.entities = self.semantic_analyzer.extract_entities(self.manifest)
+        logger.info(f"Detected {len(self.entities)} business entities")
         
         # 2. Generate tools for each entity
-        tools = []
-        for entity in entities.values():
+        self.tools = []
+        for entity in self.entities.values():
             entity_tools = self.tool_generator.generate_for_entity(entity)
-            tools.extend(entity_tools)
-        logger.info(f"Generated {len(tools)} tools")
+            self.tools.extend(entity_tools)
+        logger.info(f"Generated {len(self.tools)} tools")
         
         # 3. Generate resources
-        resources = self.resource_generator.generate_resources(entities)
-        logger.info(f"Generated {len(resources)} resources")
+        self.resources = self.resource_generator.generate_resources(self.entities)
+        logger.info(f"Generated {len(self.resources)} resources")
         
         # 4. Generate prompts
-        prompts = self.prompt_generator.generate_prompts(entities, tools)
-        logger.info(f"Generated {len(prompts)} prompts")
+        self.prompts = self.prompt_generator.generate_prompts(self.entities, self.tools)
+        logger.info(f"Generated {len(self.prompts)} prompts")
         
         # 5. Generate tests for all components
-        tests = self._generate_tests(tools, resources)
-        logger.info(f"Generated {len(tests)} tests")
+        self.tests = self._generate_tests(self.tools, self.resources)
+        logger.info(f"Generated {len(self.tests)} tests")
         
         # 6. Create metadata
-        metadata = self._create_metadata(entities, tools, resources, prompts)
+        metadata = self._create_metadata(self.entities, self.tools, self.resources, self.prompts)
         
         return GeneratedArtifacts(
-            tools=tools,
-            resources=resources,
-            prompts=prompts,
-            tests=tests,
+            tools=self.tools,
+            resources=self.resources,
+            prompts=self.prompts,
+            tests=self.tests,
             metadata=metadata
         )
     
-    def write_artifacts(self, artifacts: GeneratedArtifacts):
-        """
-        Write generated artifacts to the file system.
+    def write_artifacts(self, output_dir: str):
+        """Write generated artifacts to disk"""
+        output_path = Path(output_dir)
         
-        Args:
-            artifacts: Generated artifacts to write
-        """
-        # Create output directories
-        (self.output_dir / "tools").mkdir(parents=True, exist_ok=True)
-        (self.output_dir / "resources").mkdir(parents=True, exist_ok=True)
-        (self.output_dir / "prompts").mkdir(parents=True, exist_ok=True)
-        (self.output_dir / "tests").mkdir(parents=True, exist_ok=True)
+        # Create directories
+        tools_dir = output_path / "tools"
+        sql_dir = output_path / "sql"
+        resources_dir = output_path / "resources"
+        prompts_dir = output_path / "prompts"
+        tests_dir = output_path / "tests"
+        
+        for dir_path in [tools_dir, sql_dir, resources_dir, prompts_dir, tests_dir]:
+            dir_path.mkdir(parents=True, exist_ok=True)
+        
+        # Collect SQL queries from tool generator
+        sql_queries = {}
+        if hasattr(self.tool_generator, 'get_sql_queries'):
+            sql_queries = self.tool_generator.get_sql_queries()
         
         # Write tools
-        for tool in artifacts.tools:
-            tool_path = self.output_dir / "tools" / f"{tool['tool']['name']}.yml"
-            self._write_yaml(tool_path, tool)
+        for tool in self.tools:
+            tool_name = tool['tool']['name']
+            file_path = tools_dir / f"{tool_name}.yml"
+            with open(file_path, 'w') as f:
+                yaml.dump(tool, f, default_flow_style=False, sort_keys=False)
+            
+            # Write corresponding SQL file if it exists
+            if tool_name in sql_queries:
+                sql_path = sql_dir / f"{tool_name}.sql"
+                with open(sql_path, 'w') as f:
+                    f.write(sql_queries[tool_name])
         
         # Write resources
-        for resource in artifacts.resources:
-            resource_path = self.output_dir / "resources" / f"{resource['resource']['name']}.yml"
-            self._write_yaml(resource_path, resource)
+        for resource in self.resources:
+            resource_name = resource['resource']['name']
+            file_path = resources_dir / f"{resource_name}.yml"
+            with open(file_path, 'w') as f:
+                yaml.dump(resource, f, default_flow_style=False, sort_keys=False)
         
         # Write prompts
-        for prompt in artifacts.prompts:
-            prompt_path = self.output_dir / "prompts" / f"{prompt['prompt']['name']}.yml"
-            self._write_yaml(prompt_path, prompt)
+        for prompt in self.prompts:
+            prompt_name = prompt['prompt']['name']
+            file_path = prompts_dir / f"{prompt_name}.yml"
+            with open(file_path, 'w') as f:
+                yaml.dump(prompt, f, default_flow_style=False, sort_keys=False)
         
-        # Write test configuration
-        test_config = {
-            "mxcp": "1.0.0",
-            "tests": artifacts.tests
-        }
-        self._write_yaml(self.output_dir / "tests" / "generated_tests.yml", test_config)
+        # Write tests
+        if self.tests:
+            tests_file = tests_dir / "generated_tests.yml"
+            with open(tests_file, 'w') as f:
+                yaml.dump({"tests": self.tests}, f, default_flow_style=False, sort_keys=False)
         
         # Write metadata
-        self._write_json(self.output_dir / "generation_metadata.json", artifacts.metadata)
+        metadata = {
+            "version": "0.1.0",
+            "generation_timestamp": datetime.now().isoformat(),
+            "dbt_manifest": str(self.manifest_path),
+            "statistics": {
+                "entities_detected": len(self.entities),
+                "tools_generated": len(self.tools),
+                "resources_generated": len(self.resources),
+                "prompts_generated": len(self.prompts),
+                "tests_generated": len(self.tests)
+            },
+            "entities": {
+                entity_name: {
+                    "primary_model": entity.primary_model.name,
+                    "related_models": [m.name for m in entity.related_models],
+                    "columns": len(entity.columns)
+                }
+                for entity_name, entity in self.entities.items()
+            }
+        }
         
-        logger.info(f"Artifacts written to {self.output_dir}")
+        metadata_file = output_path / "generation_metadata.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        logger.info(f"Artifacts written to {output_path}")
     
     def _generate_tests(self, tools: List[Dict], resources: List[Dict]) -> List[Dict]:
         """Generate test cases for tools and resources."""
@@ -204,8 +253,6 @@ class MCPGenerator:
         prompts: List[Dict]
     ) -> Dict:
         """Create metadata about the generation process."""
-        from datetime import datetime
-        
         return {
             "version": "0.1.0",
             "generation_timestamp": datetime.now().isoformat(),
@@ -229,8 +276,6 @@ class MCPGenerator:
     
     def _write_yaml(self, path: Path, data: Dict):
         """Write data as YAML file."""
-        import yaml
-        
         with open(path, 'w') as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
     

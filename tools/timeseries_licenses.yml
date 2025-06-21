@@ -91,30 +91,5 @@ tool:
         unique_licenses:
           type: integer
   source:
-    code: "SELECT\n  DATE_TRUNC($granularity, \n    CASE \n      WHEN $timeField =\
-      \ 'bl_est_date_d' THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d'\
-      \ THEN bl_exp_date_d\n      ELSE bl_est_date_d\n    END\n  ) as period,\n  COUNT(*)\
-      \ as count,\n  COUNT(DISTINCT license_pk) as unique_licenses\nFROM dim_licenses_v1\n\
-      WHERE CASE \n    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d\n    WHEN\
-      \ $timeField = 'bl_exp_date_d' THEN bl_exp_date_d\n    ELSE bl_est_date_d\n\
-      \  END IS NOT NULL\n  AND ($startDate IS NULL OR \n    CASE \n      WHEN $timeField\
-      \ = 'bl_est_date_d' THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d'\
-      \ THEN bl_exp_date_d\n      ELSE bl_est_date_d\n    END >= $startDate::DATE)\n\
-      \  AND ($endDate IS NULL OR \n    CASE \n      WHEN $timeField = 'bl_est_date_d'\
-      \ THEN bl_est_date_d\n      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d\n\
-      \      ELSE bl_est_date_d\n    END <= $endDate::DATE)\n  AND ($filterLicensePk\
-      \ IS NULL OR license_pk = $filterLicensePk)\n  AND ($filterBl IS NULL OR bl\
-      \ = $filterBl)\n  AND ($filterCbls IS NULL OR bl_cbls = $filterCbls)\n  AND\
-      \ ($filterEmirateNameEn IS NULL OR emirate_name_en = $filterEmirateNameEn)\n\
-      \  AND ($filterEmirateNameAr IS NULL OR emirate_name_ar = $filterEmirateNameAr)\n\
-      \  AND ($filterIssuanceAuthorityEn IS NULL OR issuance_authority_en = $filterIssuanceAuthorityEn)\n\
-      \  AND ($filterIssuanceAuthorityAr IS NULL OR issuance_authority_ar = $filterIssuanceAuthorityAr)\n\
-      \  AND ($filterIssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en\
-      \ = $filterIssuanceAuthorityBranchEn)\n  AND ($filterIssuanceAuthorityBranchAr\
-      \ IS NULL OR issuance_authority_branch_ar = $filterIssuanceAuthorityBranchAr)\n\
-      \  AND ($filterStatusEn IS NULL OR bl_status_en = $filterStatusEn)\n  AND ($EstDateFrom\
-      \ IS NULL OR bl_est_date_d >= $EstDateFrom::DATE)\n  AND ($EstDateTo IS NULL\
-      \ OR bl_est_date_d <= $EstDateTo::DATE)\n  AND ($ExpDateFrom IS NULL OR bl_exp_date_d\
-      \ >= $ExpDateFrom::DATE)\n  AND ($ExpDateTo IS NULL OR bl_exp_date_d <= $ExpDateTo::DATE)\n\
-      GROUP BY period\nORDER BY period DESC"
+    file: sql/timeseries_licenses.sql
   enabled: true

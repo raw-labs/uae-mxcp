@@ -94,7 +94,7 @@ Examples:
         # Write files unless dry run
         if not args.dry_run:
             logger.info(f"Writing artifacts to {args.output_dir}")
-            generator.write_artifacts(artifacts)
+            generator.write_artifacts(args.output_dir)
             logger.info("Generation complete!")
         else:
             logger.info("Dry run complete - no files written")
