@@ -225,5 +225,5 @@ tool:
           type: string
           description: A flag indicating if the license is for a branch ('Y' or 'N').
   source:
-    file: sql/find_licenses.sql
+    file: ../sql/find_licenses.sql
   enabled: true

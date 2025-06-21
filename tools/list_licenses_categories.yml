@@ -52,5 +52,5 @@ tool:
         count:
           type: integer
   source:
-    file: sql/list_licenses_categories.sql
+    file: ../sql/list_licenses_categories.sql
   enabled: true

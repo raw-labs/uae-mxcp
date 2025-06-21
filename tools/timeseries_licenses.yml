@@ -91,5 +91,5 @@ tool:
         unique_licenses:
           type: integer
   source:
-    file: sql/timeseries_licenses.sql
+    file: ../sql/timeseries_licenses.sql
   enabled: true

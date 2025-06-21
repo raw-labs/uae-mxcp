@@ -185,7 +185,7 @@ OFFSET $offset
                     }
                 },
                 "source": {
-                    "file": f"sql/{tool_name}.sql"
+                    "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
@@ -590,7 +590,7 @@ LIMIT 100
                     }
                 },
                 "source": {
-                    "file": f"sql/{tool_name}.sql"
+                    "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
@@ -702,7 +702,7 @@ ORDER BY period DESC
                     }
                 },
                 "source": {
-                    "file": f"sql/{tool_name}.sql"
+                    "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
@@ -846,7 +846,7 @@ ORDER BY count DESC
                     }
                 },
                 "source": {
-                    "file": f"sql/{tool_name}.sql"
+                    "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
@@ -933,7 +933,7 @@ ORDER BY count DESC NULLS LAST, value
                     }
                 },
                 "source": {
-                    "file": f"sql/{tool_name}.sql"
+                    "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }

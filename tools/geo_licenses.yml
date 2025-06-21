@@ -95,5 +95,5 @@ tool:
         max_longitude:
           type: number
   source:
-    file: sql/geo_licenses.sql
+    file: ../sql/geo_licenses.sql
   enabled: true

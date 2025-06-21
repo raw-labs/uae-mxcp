@@ -198,5 +198,5 @@ tool:
     items:
       type: object
   source:
-    file: sql/aggregate_licenses.sql
+    file: ../sql/aggregate_licenses.sql
   enabled: true
