@@ -104,6 +104,96 @@ parameters:
     default: []
 ```
 
+**LLM Guidance and Autocompletion:**
+
+Just like our categorical tools, the `embed` parameter provides **enum values for LLM autocompletion and autocorrection**. This is crucial for LLM usability:
+
+1. **Autocompletion**: LLMs can suggest valid embed options
+2. **Autocorrection**: LLMs can fix typos like "owner" → "owners"
+3. **Discovery**: LLMs learn what relationships are available
+4. **Validation**: Invalid embed values are rejected with helpful error messages
+
+**Example LLM Interaction:**
+
+```
+User: "Find licenses and include owner information"
+LLM: "I'll search for licenses and embed the owner details using the 'owners' relationship."
+
+API Call: GET /find_licenses?embed=owners
+
+User: "Also include their business activities"  
+LLM: "I'll add the activities relationship to the embed parameter."
+
+API Call: GET /find_licenses?embed=owners,activities
+```
+
+**Error Handling for Invalid Embeds:**
+
+```json
+// Request: GET /find_licenses?embed=owner,activity (typos)
+{
+  "error": "Invalid embed values",
+  "details": {
+    "invalid_values": ["owner", "activity"],
+    "suggestions": {
+      "owner": "owners",
+      "activity": "activities"
+    },
+    "valid_options": ["owners", "activities", "inspections"]
+  }
+}
+```
+
+**Dynamic Enum Generation:**
+
+The framework automatically generates enum values based on detected relationships:
+
+```python
+def _generate_embed_enum(self, entity: BusinessEntity) -> List[str]:
+    """Generate enum values for embed parameter"""
+    embed_options = []
+    
+    # Add direct relationships
+    for rel in entity.relationships:
+        if rel.fetch_type != "NONE":
+            alias = rel.alias or self._derive_alias(rel.to_model)
+            embed_options.append(alias)
+    
+    # Add chained relationships (A.B)
+    for rel in entity.relationships:
+        if rel.fetch_type != "NONE":
+            for nested_rel in self._get_nested_relationships(rel.to_model):
+                if nested_rel.fetch_type != "NONE":
+                    chain = f"{rel.alias}.{nested_rel.alias}"
+                    embed_options.append(chain)
+    
+    return sorted(embed_options)
+```
+
+**Generated Enum Examples:**
+
+```yaml
+# Simple relationships
+enum: ["owners", "activities", "inspections"]
+
+# With chained relationships  
+enum: [
+  "owners",                    # Level 1: licenses -> owners
+  "owners.addresses",          # Level 2: licenses -> owners -> addresses
+  "owners.contacts",           # Level 2: licenses -> owners -> contacts
+  "activities",                # Level 1: licenses -> activities
+  "activities.permits",        # Level 2: licenses -> activities -> permits
+  "inspections"                # Level 1: licenses -> inspections
+]
+
+# With aliases from meta configuration
+enum: [
+  "primary_owners",            # alias: "primary_owners"
+  "business_activities",       # alias: "business_activities" 
+  "compliance_history"         # alias: "compliance_history"
+]
+```
+
 #### 3.1.3 SQL Generation for Embedding
 
 **One-to-Many Embedding (Parent embeds children)**:
@@ -946,509 +1036,4 @@ parameters:
 
 #### Phase 3: Cross-Entity Filtering
 - Add cross-entity filter parameters
-- Implement `EXISTS` subquery generation
-- Add configuration options for parameter control
-
-#### Phase 4: Advanced Features
-- Implement N-M relationship support
-- Add meta configuration parsing
-- Implement ordering and aliasing features
-
-### 8.3 Testing Strategy
-
-#### 8.3.1 Relationship Detection Tests
-
-```python
-def test_one_to_many_detection():
-    """Test detection of 1-N relationships"""
-    manifest = load_test_manifest()
-    analyzer = EnhancedSemanticAnalyzer()
-    relationships = analyzer.extract_relationships(manifest)
-    
-    assert "dim_licenses" in relationships
-    license_rels = relationships["dim_licenses"]
-    owner_rel = next(r for r in license_rels if r.to_model == "fact_license_owners")
-    assert owner_rel.relationship_type == "one_to_many"
-
-def test_junction_table_detection():
-    """Test detection of N-M relationships via junction tables"""
-    manifest = load_test_manifest_with_junction()
-    analyzer = EnhancedSemanticAnalyzer()
-    junction_tables = analyzer._detect_junction_tables(manifest)
-    
-    assert "jct_license_activities" in junction_tables
-```
-
-#### 8.3.2 SQL Generation Tests
-
-```python
-def test_embed_sql_generation():
-    """Test SQL generation for embedding related entities"""
-    entity = create_test_entity_with_relationships()
-    generator = MultiModelToolGenerator(test_relationships)
-    sql = generator._generate_enhanced_sql(entity)
-    
-    assert "CASE WHEN 'owners' = ANY($embed)" in sql
-    assert "json_group_array" in sql
-    assert "ORDER BY" in sql
-
-def test_cross_entity_filter_sql():
-    """Test SQL generation for cross-entity filtering"""
-    entity = create_test_entity_with_relationships()
-    generator = MultiModelToolGenerator(test_relationships)
-    sql = generator._generate_enhanced_sql(entity)
-    
-    assert "EXISTS (" in sql
-    assert "$ownerNationality" in sql
-```
-
-
----
-
-## 9. Error Handling and Validation
-
-### 9.1 Relationship Validation
-
-#### 9.1.1 Circular Dependency Detection
-
-```python
-def detect_circular_dependencies(relationships: Dict[str, List[RelationshipInfo]]) -> List[str]:
-    """Detect circular dependencies in relationship graph"""
-    visited = set()
-    rec_stack = set()
-    cycles = []
-    
-    def dfs(node, path):
-        if node in rec_stack:
-            cycle_start = path.index(node)
-            cycles.append(" -> ".join(path[cycle_start:] + [node]))
-            return
-        
-        if node in visited:
-            return
-        
-        visited.add(node)
-        rec_stack.add(node)
-        
-        for rel in relationships.get(node, []):
-            dfs(rel.to_model, path + [node])
-        
-        rec_stack.remove(node)
-    
-    for model in relationships:
-        if model not in visited:
-            dfs(model, [])
-    
-    return cycles
-```
-
-#### 9.1.2 Configuration Validation
-
-```python
-def validate_meta_configuration(meta_config: Dict) -> List[str]:
-    """Validate mxcp_gen meta configuration"""
-    errors = []
-    
-    if 'relationships' in meta_config:
-        for rel_config in meta_config['relationships']:
-            # Validate fetch type
-            if 'fetch' in rel_config:
-                if rel_config['fetch'] not in ['LAZY', 'EAGER', 'NONE']:
-                    errors.append(f"Invalid fetch type: {rel_config['fetch']}")
-            
-            # Validate target model exists
-            if 'to' not in rel_config:
-                errors.append("Relationship configuration missing 'to' field")
-    
-    return errors
-```
-
-### 9.2 Runtime Error Handling
-
-#### 9.2.1 Missing Relationship Targets
-
-When a relationship references a model that doesn't exist:
-
-```python
-def handle_missing_relationship_target(from_model: str, to_model: str):
-    """Handle case where relationship target doesn't exist"""
-    logger.warning(
-        f"Model {from_model} references {to_model} in relationship test, "
-        f"but {to_model} was not found in manifest. Skipping relationship."
-    )
-```
-
-#### 9.2.2 SQL Generation Errors
-
-When SQL generation fails for complex relationships:
-
-```python
-def generate_fallback_sql(entity: BusinessEntity, error: Exception) -> str:
-    """Generate fallback SQL when complex relationship SQL fails"""
-    logger.error(f"Failed to generate enhanced SQL for {entity.name}: {error}")
-    logger.info(f"Falling back to simple SQL for {entity.name}")
-    
-    # Return simple, single-entity SQL
-    return super()._generate_search_sql(entity)
-```
-
----
-
-## 10. Documentation and Examples
-
-### 10.1 Generated Documentation
-
-The framework will automatically generate documentation for enhanced tools:
-
-```yaml
-# Generated tool documentation
-tool:
-  name: find_licenses
-  description: |
-    Search and filter business licenses with optional embedding of related entities.
-    
-    **Embedding Support:**
-    - owners: Include license owners information
-    - activities: Include business activities through junction table
-    - inspections: Include inspection history
-    
-    **Cross-Entity Filtering:**
-    - ownerNationality: Filter by owner nationality
-    - ownerGender: Filter by owner gender
-    - activityType: Filter by business activity type
-    
-    **Performance Notes:**
-    - Embedding is lazy-loaded and only executed when requested
-    - Cross-entity filters use EXISTS subqueries for optimal performance
-```
-
-### 10.2 Usage Examples
-
-#### 10.2.1 Basic Search (Unchanged)
-
-```bash
-curl "http://localhost:8000/find_licenses?BlStatusEn=Active&limit=10"
-```
-
-#### 10.2.2 Search with Embedding
-
-```bash
-curl "http://localhost:8000/find_licenses?BlStatusEn=Active&embed=owners,activities"
-```
-
-#### 10.2.3 Cross-Entity Filtering
-
-```bash
-curl "http://localhost:8000/find_licenses?ownerNationality=UAE&activityType=Commercial"
-```
-
-#### 10.2.4 Combined Usage
-
-```bash
-curl "http://localhost:8000/find_licenses?BlStatusEn=Active&ownerGender=Female&embed=owners&limit=5"
-```
-
----
-
-## 11. Future Enhancements
-
-### 11.1 Advanced Relationship Features
-
-#### 11.1.1 Nested Embedding
-
-Support for deep embedding like `embed=owners.addresses`:
-
-```yaml
-parameters:
-  - name: embed
-    type: array
-    items:
-      type: string
-      enum: ["owners", "owners.addresses", "activities", "activities.permits"]
-```
-
-#### 11.1.2 Chained Entity Embedding (A -> B -> C)
-
-**Scenario**: You want to lazily join three entities in a chain: `dim_licenses` -> `fact_license_owners` -> `dim_owner_addresses`
-
-**Challenge**: How to handle multi-level relationships while maintaining performance and avoiding complexity explosion.
-
-**Solution**: Our framework supports chained embedding through dot notation in the `embed` parameter.
-
-##### Configuration
-
-```yaml
-# models/marts/schema.yml
-models:
-  - name: dim_licenses
-    columns:
-      - name: license_pk
-        meta:
-          mxcp_gen:
-            relationships:
-              - to: "fact_license_owners"
-                fetch: "LAZY"
-                alias: "owners"
-                order_by: "owner_name ASC"
-
-  - name: fact_license_owners
-    columns:
-      - name: owner_pk
-        meta:
-          mxcp_gen:
-            relationships:
-              - to: "dim_owner_addresses"
-                fetch: "LAZY"
-                alias: "addresses"
-                order_by: "address_type ASC"
-```
-
-##### Generated Parameters
-
-The framework automatically detects the chain and generates nested embed options:
-
-```yaml
-parameters:
-  - name: embed
-    type: array
-    items:
-      type: string
-      enum: [
-        "owners",                    # Level 1: A -> B
-        "owners.addresses",          # Level 2: A -> B -> C
-        "activities",
-        "activities.permits"
-      ]
-    description: "Optionally embed related entities (supports nested embedding)"
-    default: []
-```
-
-##### SQL Generation Strategy
-
-**Level 1 Embedding** (`embed=["owners"]`):
-```sql
-SELECT
-  l.*,
-  CASE 
-    WHEN 'owners' = ANY($embed) THEN (
-      SELECT json_group_array(json_object(
-        'owner_pk', o.owner_pk,
-        'owner_name', o.owner_name,
-        'owner_gender', o.owner_gender
-      ))
-      FROM fact_license_owners o
-      WHERE o.license_pk = l.license_pk
-      ORDER BY o.owner_name ASC
-    )
-    ELSE NULL
-  END as owners
-FROM dim_licenses_v1 l
-```
-
-**Level 2 Embedding** (`embed=["owners.addresses"]`):
-```sql
-SELECT
-  l.*,
-  CASE 
-    WHEN 'owners.addresses' = ANY($embed) THEN (
-      SELECT json_group_array(json_object(
-        'owner_pk', o.owner_pk,
-        'owner_name', o.owner_name,
-        'owner_gender', o.owner_gender,
-        'addresses', (
-          SELECT json_group_array(json_object(
-            'address_pk', a.address_pk,
-            'address_line1', a.address_line1,
-            'address_type', a.address_type,
-            'emirate', a.emirate
-          ))
-          FROM dim_owner_addresses a
-          WHERE a.owner_pk = o.owner_pk
-          ORDER BY a.address_type ASC
-        )
-      ))
-      FROM fact_license_owners o
-      WHERE o.license_pk = l.license_pk
-      ORDER BY o.owner_name ASC
-    )
-    ELSE NULL
-  END as owners
-FROM dim_licenses_v1 l
-```
-
-**Mixed Embedding** (`embed=["owners", "owners.addresses"]`):
-The framework intelligently handles this by using the most specific embedding (Level 2) and ignoring the redundant Level 1.
-
-##### Performance Considerations
-
-1. **Depth Limits**: The framework limits nesting to 3 levels by default to prevent performance issues
-2. **Lazy Evaluation**: Each level is only computed when explicitly requested
-3. **Query Optimization**: Uses correlated subqueries to minimize data transfer
-4. **Caching Strategy**: Results can be cached at each level for better performance
-
-##### Implementation Details
-
-```python
-class ChainedEmbedding:
-    """Handles multi-level entity embedding"""
-    
-    def parse_embed_chain(self, embed_path: str) -> List[str]:
-        """Parse 'owners.addresses' into ['owners', 'addresses']"""
-        return embed_path.split('.')
-    
-    def generate_nested_sql(self, entity: BusinessEntity, embed_chains: List[str]) -> str:
-        """Generate SQL for nested embedding"""
-        # Group by depth level
-        embed_by_depth = self._group_embeds_by_depth(embed_chains)
-        
-        # Generate SQL for deepest level (others are redundant)
-        deepest_embeds = max(embed_by_depth.keys())
-        
-        sql_parts = []
-        for embed_chain in embed_by_depth[deepest_embeds]:
-            sql_parts.append(self._generate_chain_sql(entity, embed_chain))
-        
-        return self._combine_sql_parts(sql_parts)
-    
-    def _generate_chain_sql(self, entity: BusinessEntity, chain: List[str]) -> str:
-        """Generate SQL for a specific embedding chain"""
-        if len(chain) == 1:
-            return self._generate_simple_embed_sql(entity, chain[0])
-        else:
-            return self._generate_nested_embed_sql(entity, chain)
-```
-
-##### Configuration Options
-
-```yaml
-meta:
-  mxcp_gen:
-    chained_embedding:
-      max_depth: 3                    # Limit nesting depth
-      performance_mode: "subquery"    # "subquery" | "join" | "materialized"
-      cache_levels: [1, 2]            # Cache results at these levels
-      timeout_ms: 5000                # Query timeout for complex chains
-```
-
-##### Error Handling
-
-1. **Circular Dependencies**: Detect and prevent A -> B -> C -> A cycles
-2. **Missing Links**: Handle cases where B exists but C doesn't
-3. **Performance Limits**: Timeout protection for complex nested queries
-4. **Fallback Strategy**: Degrade gracefully to simpler embedding levels
-
-##### Usage Examples
-
-```bash
-# Basic chained embedding
-curl "http://localhost:8000/find_licenses?embed=owners.addresses"
-
-# Multiple chains
-curl "http://localhost:8000/find_licenses?embed=owners.addresses,activities.permits"
-
-# Mixed levels (framework uses deepest)
-curl "http://localhost:8000/find_licenses?embed=owners,owners.addresses"
-
-# With filtering
-curl "http://localhost:8000/find_licenses?BlStatusEn=Active&embed=owners.addresses&limit=5"
-```
-
-##### Response Structure
-
-```json
-{
-  "results": [
-    {
-      "license_pk": "LIC123",
-      "bl_name_en": "Example Business",
-      "bl_status_en": "Active",
-      "owners": [
-        {
-          "owner_pk": "OWN456",
-          "owner_name": "John Smith",
-          "owner_gender": "Male",
-          "addresses": [
-            {
-              "address_pk": "ADDR789",
-              "address_line1": "123 Business St",
-              "address_type": "Business",
-              "emirate": "Dubai"
-            },
-            {
-              "address_pk": "ADDR790",
-              "address_line1": "456 Home Ave",
-              "address_type": "Residential", 
-              "emirate": "Abu Dhabi"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-
-This approach provides maximum flexibility while maintaining performance through lazy evaluation and intelligent query optimization.
-
-#### 11.1.3 Conditional Embedding
-
-Embed related entities only when certain conditions are met:
-
-```yaml
-meta:
-  mxcp_gen:
-    relationships:
-      - to: "fact_license_owners"
-        fetch: "LAZY"
-        condition: "owner_type = 'Primary'"
-```
-
-### 11.2 Write Operation Support
-
-#### 11.2.1 Cascade Operations
-
-When write tools are implemented, use the `cascade` configuration:
-
-```yaml
-meta:
-  mxcp_gen:
-    relationships:
-      - to: "fact_license_owners"
-        cascade: "DELETE"  # Delete owners when license is deleted
-```
-
-#### 11.2.2 Transaction Management
-
-Ensure multi-entity operations are atomic:
-
-```python
-def delete_license_with_cascade(license_pk: str):
-    """Delete license and cascade to related entities"""
-    with transaction():
-        delete_related_owners(license_pk)
-        delete_related_activities(license_pk)
-        delete_license(license_pk)
-```
-
----
-
-## 12. Conclusion
-
-This multi-model framework specification provides a comprehensive, well-structured approach to extending our MXCP tool generation system while maintaining its core strengths of simplicity and dbt-first philosophy.
-
-### Key Benefits
-
-1. **Maintains Simplicity**: Builds incrementally on existing successful patterns
-2. **Performance Optimized**: Lazy loading prevents unnecessary performance overhead
-3. **Highly Configurable**: ORM-inspired configuration provides fine-grained control
-4. **Future-Proof**: Architecture supports advanced features without breaking changes
-5. **Developer Friendly**: Familiar patterns from established ORM frameworks
-
-### Implementation Priority
-
-1. **Phase 1**: Relationship detection and basic embedding (highest value, lowest risk)
-2. **Phase 2**: Cross-entity filtering (medium value, medium complexity)
-3. **Phase 3**: Advanced configuration and optimization (lower priority, higher complexity)
-
-This specification serves as the definitive guide for implementing multi-model support in our MXCP tool generation framework.
-
+- Implement `EXISTS`
