@@ -1,0 +1,115 @@
+mxcp: 1.0.0
+tool:
+  name: aggregate_license_owners
+  description: Aggregate license_owners data by various dimensions
+  parameters:
+  - name: groupByOwnerPk
+    type: boolean
+    description: Group by OwnerPk
+    default: false
+  - name: groupByLicensePk
+    type: boolean
+    description: Group by LicensePk
+    default: false
+  - name: groupByOwnerGender
+    type: boolean
+    description: Group by OwnerGender
+    default: false
+  - name: groupByNationality
+    type: boolean
+    description: Group by Nationality
+    default: false
+  - name: groupByOwnerType
+    type: boolean
+    description: Group by OwnerType
+    default: false
+  - name: groupByEmail
+    type: boolean
+    description: Group by Email
+    default: false
+  - name: groupByIsPrimaryOwner
+    type: boolean
+    description: Group by IsPrimaryOwner
+    default: false
+  - name: groupByIsActive
+    type: boolean
+    description: Group by IsActive
+    default: false
+  - name: groupByRequiresApproval
+    type: boolean
+    description: Group by RequiresApproval
+    default: false
+  - name: groupByPhoneNumber
+    type: boolean
+    description: Group by PhoneNumber
+    default: false
+  - name: groupByEmirates
+    type: boolean
+    description: Group by Emirates
+    default: false
+  - name: groupByCreatedBy
+    type: boolean
+    description: Group by CreatedBy
+    default: false
+  - name: OwnerPk
+    type: string
+    description: Filter by owner_pk
+  - name: LicensePk
+    type: string
+    description: Filter by license_pk
+  - name: OwnerName
+    type: string
+    description: Filter by owner_name
+  - name: OwnerGender
+    type: string
+    description: Filter by owner_gender
+    enum:
+    - Male
+    - Female
+    - null
+  - name: Nationality
+    type: string
+    description: Filter by nationality
+    enum:
+    - UAE
+    - India
+    - Pakistan
+    - Egypt
+    - Other
+    - null
+  - name: OwnerType
+    type: string
+    description: Filter by owner_type
+    enum:
+    - Primary
+    - Partner
+    - Shareholder
+    - null
+  - name: OwnershipPercentage
+    type: string
+    description: Filter by ownership_percentage
+  - name: PhoneNumber
+    type: string
+    description: Filter by phone_number
+  - name: Email
+    type: string
+    description: Filter by email
+  - name: Emirates
+    type: string
+    description: Filter by emirates_id
+  - name: OwnerRegistrationDateFrom
+    type: string
+    format: date
+    description: Filter owner_registration_date from date (YYYY-MM-DD)
+  - name: OwnerRegistrationDateTo
+    type: string
+    format: date
+    description: Filter owner_registration_date to date (YYYY-MM-DD)
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+  source:
+    file: ../sql/aggregate_license_owners.sql
+  enabled: true

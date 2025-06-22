@@ -1,0 +1,14 @@
+mxcp: 1.0.0
+resource:
+  name: active_license_owners
+  description: Currently active license_owners records
+  uri: data://active/license_owners
+  source:
+    code: 'SELECT *
+
+      FROM fact_license_owners_v1
+
+      WHERE is_primary_owner = true AND is_active = true
+
+      ORDER BY created_at DESC'
+  enabled: true

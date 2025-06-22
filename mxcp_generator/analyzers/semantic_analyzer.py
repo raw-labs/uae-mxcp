@@ -36,6 +36,7 @@ class ColumnInfo:
     referenced_table: Optional[str] = None
     referenced_column: Optional[str] = None
     enum_values: List[str] = field(default_factory=list)
+    relationships: List[Dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -153,11 +154,15 @@ class SemanticAnalyzer:
         
         # First, extract test information
         column_tests = {}  # model_name -> column_name -> tests
+        relationship_tests = {}  # model_name -> column_name -> relationship_info
+        
         for node_id, node in manifest.get('nodes', {}).items():
             if node.get('resource_type') == 'test':
                 test_metadata = node.get('test_metadata', {})
-                if test_metadata.get('name') == 'accepted_values':
-                    # Extract model and column info
+                test_name = test_metadata.get('name')
+                
+                if test_name == 'accepted_values':
+                    # Extract model and column info for enum values
                     attached_node = node.get('attached_node', '')
                     column_name = node.get('column_name', '')
                     values = test_metadata.get('kwargs', {}).get('values', [])
@@ -172,6 +177,36 @@ class SemanticAnalyzer:
                             if column_name not in column_tests[model_name]:
                                 column_tests[model_name][column_name] = []
                             column_tests[model_name][column_name].extend(values)
+                
+                elif test_name == 'relationships':
+                    # Extract relationship information
+                    attached_node = node.get('attached_node', '')
+                    column_name = node.get('column_name', '')
+                    kwargs = test_metadata.get('kwargs', {})
+                    to_ref = kwargs.get('to', '')
+                    field = kwargs.get('field', '')
+                    
+                    if attached_node and column_name and to_ref and field:
+                        parts = attached_node.split('.')
+                        if len(parts) >= 3:
+                            model_name = parts[2]  # Get the model name
+                            
+                            # Extract target model from ref() function
+                            # e.g., "ref('dim_licenses')" -> "dim_licenses"
+                            ref_match = re.search(r"ref\('([^']+)'\)", to_ref)
+                            if ref_match:
+                                target_model = ref_match.group(1)
+                                
+                                if model_name not in relationship_tests:
+                                    relationship_tests[model_name] = {}
+                                if column_name not in relationship_tests[model_name]:
+                                    relationship_tests[model_name][column_name] = []
+                                
+                                relationship_tests[model_name][column_name].append({
+                                    'target_model': target_model,
+                                    'target_field': field,
+                                    'source_field': column_name
+                                })
         
         # Now parse models and enrich with test data
         for node_id, node in manifest.get('nodes', {}).items():
@@ -190,6 +225,12 @@ class SemanticAnalyzer:
                                     col_info['enum_values'] = []
                                 col_info['enum_values'] = column_tests[model_name][col_name]
                     
+                    # Enrich columns with relationship information
+                    if model_name in relationship_tests:
+                        for col_name, col_info in columns.items():
+                            if col_name in relationship_tests[model_name]:
+                                col_info['relationships'] = relationship_tests[model_name][col_name]
+                    
                     model = DbtModel(
                         name=model_name,
                         schema=node.get('schema', 'public'),
@@ -204,8 +245,8 @@ class SemanticAnalyzer:
     
     def _is_primary_entity(self, model: DbtModel) -> bool:
         """Determine if a model represents a primary business entity"""
-        # Simple heuristic: dimension tables are primary entities
-        return model.name.startswith('dim_')
+        # Both dimension and fact tables are primary entities
+        return model.name.startswith('dim_') or model.name.startswith('fact_')
     
     def _extract_entity_name(self, model_name: str) -> str:
         """Extract clean entity name from model name"""
@@ -232,6 +273,11 @@ class SemanticAnalyzer:
             enum_values = self._extract_enum_values(col_info)
             if enum_values:
                 column.enum_values = enum_values
+            
+            # Extract relationship metadata from tests
+            relationships = col_info.get('relationships', [])
+            if relationships:
+                column.relationships = relationships
             
             columns.append(column)
         

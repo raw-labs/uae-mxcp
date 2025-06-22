@@ -1,0 +1,14 @@
+mxcp: 1.0.0
+resource:
+  name: active_licenses
+  description: Currently active licenses records
+  uri: data://active/licenses
+  source:
+    code: 'SELECT *
+
+      FROM dim_licenses_v1
+
+      WHERE bl_exp_date_d > CURRENT_DATE
+
+      ORDER BY parent_licence_license_number'
+  enabled: true

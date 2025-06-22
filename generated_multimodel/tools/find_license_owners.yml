@@ -1,0 +1,176 @@
+mxcp: 1.0.0
+tool:
+  name: find_license_owners
+  description: Search and filter license_owners records
+  parameters:
+  - name: OwnerPk
+    type: string
+    description: Filter by owner_pk
+    default: null
+  - name: LicensePk
+    type: string
+    description: Filter by license_pk
+    default: null
+  - name: OwnerName
+    type: string
+    description: Filter by owner_name
+    default: null
+  - name: OwnerGender
+    type: string
+    description: Filter by owner_gender
+    enum:
+    - Male
+    - Female
+    - null
+    default: null
+  - name: Nationality
+    type: string
+    description: Filter by nationality
+    enum:
+    - UAE
+    - India
+    - Pakistan
+    - Egypt
+    - Other
+    - null
+    default: null
+  - name: OwnerType
+    type: string
+    description: Filter by owner_type
+    enum:
+    - Primary
+    - Partner
+    - Shareholder
+    - null
+    default: null
+  - name: OwnershipPercentage
+    type: string
+    description: Filter by ownership_percentage
+    default: null
+  - name: PhoneNumber
+    type: string
+    description: Filter by phone_number
+    default: null
+  - name: Email
+    type: string
+    description: Filter by email
+    default: null
+  - name: Emirates
+    type: string
+    description: Filter by emirates_id
+    default: null
+  - name: OwnerRegistrationDateFrom
+    type: string
+    format: date
+    description: Filter owner_registration_date from date (YYYY-MM-DD)
+    default: null
+  - name: OwnerRegistrationDateTo
+    type: string
+    format: date
+    description: Filter owner_registration_date to date (YYYY-MM-DD)
+    default: null
+  - name: IsPrimaryOwner
+    type: string
+    description: Filter by is_primary_owner
+    default: null
+  - name: IsActive
+    type: string
+    description: Filter by is_active
+    default: null
+  - name: RequiresApproval
+    type: string
+    description: Filter by requires_approval
+    default: null
+  - name: CreatedAtFrom
+    type: string
+    format: date
+    description: Filter created_at from date (YYYY-MM-DD)
+    default: null
+  - name: CreatedAtTo
+    type: string
+    format: date
+    description: Filter created_at to date (YYYY-MM-DD)
+    default: null
+  - name: CreatedByFrom
+    type: string
+    format: date
+    description: Filter created_by from date (YYYY-MM-DD)
+    default: null
+  - name: CreatedByTo
+    type: string
+    format: date
+    description: Filter created_by to date (YYYY-MM-DD)
+    default: null
+  - name: embed
+    type: array
+    items:
+      type: string
+      enum:
+      - licenses
+    description: Related entities to embed in results (lazy loading)
+    default: []
+  - name: limit
+    type: integer
+    description: Maximum number of records to return
+    default: 100
+  - name: offset
+    type: integer
+    description: Number of records to skip
+    default: 0
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        owner_pk:
+          type: string
+          description: Unique identifier for each owner record
+        license_pk:
+          type: string
+          description: Foreign key reference to the business license
+        owner_name:
+          type: string
+          description: Full name of the license owner
+        owner_gender:
+          type: string
+          description: Gender of the owner
+        nationality:
+          type: string
+          description: Nationality of the owner
+        owner_type:
+          type: string
+          description: Type of ownership role
+        ownership_percentage:
+          type: number
+          description: Percentage of ownership in the business
+        phone_number:
+          type: string
+          description: Contact phone number for the owner
+        email:
+          type: string
+          description: Email address of the owner
+        emirates_id:
+          type: string
+          description: Emirates ID number for UAE nationals
+        owner_registration_date:
+          type: string
+          description: Date when the owner was registered for this license
+        is_primary_owner:
+          type: boolean
+          description: Flag indicating if this is the primary owner of the license
+        is_active:
+          type: boolean
+          description: Flag indicating if the owner is currently active
+        requires_approval:
+          type: boolean
+          description: Flag indicating if ownership changes require regulatory approval
+        created_at:
+          type: string
+          description: Timestamp when the record was created
+        created_by:
+          type: string
+          description: System or user that created the record
+  source:
+    file: ../sql/find_license_owners.sql
+  enabled: true

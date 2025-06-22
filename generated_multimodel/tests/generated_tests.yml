@@ -1,0 +1,330 @@
+tests:
+- name: test_find_licenses_basic
+  tool: find_licenses
+  description: Basic functionality test for find_licenses
+  params:
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlStatusAr: test_value
+    BlNameEn: test_value
+    BlNameAr: test_value
+    BlLegalTypeEn: test_value
+    BlLegalTypeAr: test_value
+    BlEstDateFrom: test_value
+    BlEstDateTo: test_value
+    BlExpDateFrom: test_value
+    BlExpDateTo: test_value
+    BlTypeEn: test_value
+    BlTypeAr: test_value
+    LicenseBranchFlag: Y
+    BlFullAddress: test_value
+    ParentLicenceLicenseNumber: test_value
+    ParentLicenseIssuanceAuthorityEn: ADGM
+    ParentLicenseIssuanceAuthorityAr: "\u0628\u0644\u062F\u064A\u0629"
+    RelationshipTypeEn: test_value
+    RelationshipTypeAr: test_value
+    OwnerNationalityAr: test_value
+    OwnerGender: Male
+    OwnerNationalityEn: test_value
+    BusinessActivityCode: test_value
+    BusinessActivityDescEn: test_value
+    BusinessActivityDescAr: test_value
+    LicenseLatitude: test_value
+    LicenseLongitude: test_value
+    LicenseLatitude1: test_value
+    LicenseLongitude1: test_value
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
+    limit: 1
+    offset: 1
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_find_licenses_invalid_params
+  tool: find_licenses
+  description: Invalid parameter test for find_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_aggregate_licenses_basic
+  tool: aggregate_licenses
+  description: Basic functionality test for aggregate_licenses
+  params:
+    groupByLicensePk: true
+    groupByBl: true
+    groupByBlCbls: true
+    groupByEmirateNameEn: true
+    groupByEmirateNameAr: true
+    groupByIssuanceAuthorityEn: true
+    groupByIssuanceAuthorityAr: true
+    groupByIssuanceAuthorityBranchEn: true
+    groupByIssuanceAuthorityBranchAr: true
+    groupByBlStatusEn: true
+    groupByBlStatusAr: true
+    groupByBlNameEn: true
+    groupByBlNameAr: true
+    groupByBlLegalTypeEn: true
+    groupByBlLegalTypeAr: true
+    groupByBlTypeEn: true
+    groupByBlTypeAr: true
+    groupByLicenseBranchFlag: true
+    groupByParentLicenseIssuanceAuthorityEn: true
+    groupByParentLicenseIssuanceAuthorityAr: true
+    groupByRelationshipTypeEn: true
+    groupByRelationshipTypeAr: true
+    groupByOwnerNationalityAr: true
+    groupByOwnerGender: true
+    groupByOwnerNationalityEn: true
+    groupByBusinessActivityDescEn: true
+    groupByBusinessActivityDescAr: true
+    groupByLicenseLatitude: true
+    groupByLicenseLongitude: true
+    groupByLicenseLatitude1: true
+    groupByLicenseLongitude1: true
+    groupByBlEstDate: true
+    groupByBlExpDate: true
+    groupByBlFullAddress: true
+    groupByParentLicenceLicenseNumber: true
+    groupByBusinessActivityCode: true
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_aggregate_licenses_invalid_params
+  tool: aggregate_licenses
+  description: Invalid parameter test for aggregate_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_timeseries_licenses_basic
+  tool: timeseries_licenses
+  description: Basic functionality test for timeseries_licenses
+  params:
+    timeField: bl_est_date
+    granularity: day
+    startDate: test_value
+    endDate: test_value
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_timeseries_licenses_invalid_params
+  tool: timeseries_licenses
+  description: Invalid parameter test for timeseries_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_geo_licenses_basic
+  tool: geo_licenses
+  description: Basic functionality test for geo_licenses
+  params:
+    groupByField: bl_full_address
+    includeCoordinates: true
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_geo_licenses_invalid_params
+  tool: geo_licenses
+  description: Invalid parameter test for geo_licenses
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_list_licenses_categories_basic
+  tool: list_licenses_categories
+  description: Basic functionality test for list_licenses_categories
+  params:
+    field: license_pk
+    includeCount: true
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_list_licenses_categories_invalid_params
+  tool: list_licenses_categories
+  description: Invalid parameter test for list_licenses_categories
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_find_license_owners_basic
+  tool: find_license_owners
+  description: Basic functionality test for find_license_owners
+  params:
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+    IsPrimaryOwner: test_value
+    IsActive: test_value
+    RequiresApproval: test_value
+    CreatedAtFrom: test_value
+    CreatedAtTo: test_value
+    CreatedByFrom: test_value
+    CreatedByTo: test_value
+    embed: []
+    limit: 1
+    offset: 1
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_find_license_owners_invalid_params
+  tool: find_license_owners
+  description: Invalid parameter test for find_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_aggregate_license_owners_basic
+  tool: aggregate_license_owners
+  description: Basic functionality test for aggregate_license_owners
+  params:
+    groupByOwnerPk: true
+    groupByLicensePk: true
+    groupByOwnerGender: true
+    groupByNationality: true
+    groupByOwnerType: true
+    groupByEmail: true
+    groupByIsPrimaryOwner: true
+    groupByIsActive: true
+    groupByRequiresApproval: true
+    groupByPhoneNumber: true
+    groupByEmirates: true
+    groupByCreatedBy: true
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_aggregate_license_owners_invalid_params
+  tool: aggregate_license_owners
+  description: Invalid parameter test for aggregate_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_timeseries_license_owners_basic
+  tool: timeseries_license_owners
+  description: Basic functionality test for timeseries_license_owners
+  params:
+    timeField: owner_registration_date
+    granularity: day
+    startDate: test_value
+    endDate: test_value
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_timeseries_license_owners_invalid_params
+  tool: timeseries_license_owners
+  description: Invalid parameter test for timeseries_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_list_license_owners_categories_basic
+  tool: list_license_owners_categories
+  description: Basic functionality test for list_license_owners_categories
+  params:
+    field: owner_pk
+    includeCount: true
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_list_license_owners_categories_invalid_params
+  tool: list_license_owners_categories
+  description: Invalid parameter test for list_license_owners_categories
+  params:
+    invalid_param: test
+  expect_error: true

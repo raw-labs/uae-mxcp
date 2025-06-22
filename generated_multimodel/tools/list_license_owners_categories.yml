@@ -1,0 +1,35 @@
+mxcp: 1.0.0
+tool:
+  name: list_license_owners_categories
+  description: List distinct values for categorical fields in license_owners
+  parameters:
+  - name: field
+    type: string
+    description: The categorical field to get values for
+    enum:
+    - owner_pk
+    - license_pk
+    - owner_gender
+    - nationality
+    - owner_type
+    - email
+    - is_primary_owner
+    - is_active
+    - requires_approval
+  - name: includeCount
+    type: boolean
+    description: Include count of records for each value
+    default: true
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
+  source:
+    file: ../sql/list_license_owners_categories.sql
+  enabled: true

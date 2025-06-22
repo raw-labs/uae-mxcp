@@ -148,6 +148,20 @@ class ToolGenerator:
                 else:
                     where_conditions.append(f"  AND (${param_name} IS NULL OR {col.name} ILIKE '%' || ${param_name} || '%')")
         
+        # Add multi-model embed parameter
+        embed_options = self._get_embed_options(entity)
+        if embed_options:
+            parameters.append({
+                "name": "embed",
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": embed_options
+                },
+                "description": "Related entities to embed in results (lazy loading)",
+                "default": []
+            })
+        
         # Add pagination parameters
         parameters.extend([
             {
@@ -164,8 +178,8 @@ class ToolGenerator:
             }
         ])
         
-        # Build SQL
-        sql = f"""
+        # Build SQL with conditional embedding
+        base_sql = f"""
 SELECT *
 FROM {entity.primary_model.name}_v1
 WHERE 1=1
@@ -174,6 +188,9 @@ ORDER BY {self._get_default_order_column(entity)} DESC
 LIMIT $limit
 OFFSET $offset
         """.strip()
+        
+        # Generate enhanced SQL with embedding support
+        sql = self._generate_embedding_sql(entity, base_sql)
         
         # Store SQL separately
         self.sql_queries[tool_name] = sql
@@ -1023,16 +1040,83 @@ ORDER BY count DESC NULLS LAST, value
         }
     
     def _get_parameter_type(self, col: ColumnInfo) -> str:
-        """Map column data type to parameter type"""
+        """Map database column type to parameter type"""
         data_type = col.data_type.upper()
         
-        if data_type in ['INTEGER', 'BIGINT']:
+        if data_type in ['INTEGER', 'BIGINT', 'SMALLINT']:
             return 'integer'
-        elif data_type in ['DOUBLE', 'FLOAT', 'DECIMAL', 'NUMERIC']:
+        elif data_type in ['DECIMAL', 'NUMERIC', 'FLOAT', 'DOUBLE', 'REAL']:
             return 'number'
-        elif data_type == 'BOOLEAN':
+        elif data_type in ['BOOLEAN', 'BOOL']:
             return 'boolean'
-        elif data_type == 'DATE':
-            return 'string'  # Dates are passed as strings
+        elif data_type in ['DATE', 'DATETIME', 'TIMESTAMP']:
+            return 'string'  # Dates as strings with format
         else:
-            return 'string'  # Default to string for VARCHAR, TEXT, etc. 
+            return 'string'
+    
+    def _get_embed_options(self, entity: BusinessEntity) -> List[str]:
+        """Get available embed options for an entity based on relationships"""
+        embed_options = []
+        
+        # Look for foreign key relationships in the entity's columns
+        for col in entity.columns:
+            col_info = getattr(col, 'relationships', None)
+            if col_info:
+                for rel_info in col_info:
+                    target_model = rel_info.get('target_model', '')
+                    if target_model and target_model.startswith('dim_'):
+                        # Convert dim_licenses -> licenses
+                        entity_name = target_model[4:]  # Remove 'dim_' prefix
+                        embed_options.append(entity_name)
+        
+        # Also check if there are related models that reference this entity
+        # This would require analyzing all entities, but for now we'll use the direct relationships
+        
+        return list(set(embed_options))  # Remove duplicates
+    
+    def _generate_embedding_sql(self, entity: BusinessEntity, base_sql: str) -> str:
+        """Generate SQL with conditional embedding support"""
+        # For now, generate a simple version that can be enhanced
+        # In a full implementation, this would use CASE statements and JSON aggregation
+        
+        embedding_template = f"""
+-- Base query
+WITH base_data AS (
+{base_sql}
+)
+
+-- Enhanced query with conditional embedding
+SELECT 
+  bd.*,
+  CASE 
+    WHEN $embed IS NULL OR ARRAY_LENGTH($embed) = 0 THEN NULL
+    ELSE JSON_OBJECT()  -- Placeholder for embedded data
+  END as _embedded
+FROM base_data bd
+        """.strip()
+        
+        return embedding_template
+    
+    def _detect_relationships_from_columns(self, entity: BusinessEntity) -> Dict[str, Any]:
+        """Detect relationships from column metadata"""
+        relationships = {}
+        
+        for col in entity.columns:
+            # Check if column has relationship metadata from dbt tests
+            if hasattr(col, 'relationships') and col.relationships:
+                for rel_info in col.relationships:
+                    target_model = rel_info.get('target_model', '')
+                    target_field = rel_info.get('target_field', '')
+                    
+                    if target_model and target_field:
+                        # Determine relationship type (for now assume many-to-one)
+                        rel_type = "many-to-one"
+                        
+                        relationships[target_model] = {
+                            'type': rel_type,
+                            'source_field': col.name,
+                            'target_field': target_field,
+                            'target_model': target_model
+                        }
+        
+        return relationships 

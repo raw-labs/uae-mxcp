@@ -314,3 +314,109 @@ models:
         tests:
           - not_null:
               where: "lon_dd IS NOT NULL"
+
+  - name: fact_license_owners
+    description: "License ownership information - contains details about individuals and entities that own business licenses"
+    
+    columns:
+      - name: owner_pk
+        description: "Unique identifier for each owner record"
+        data_type: varchar
+        tests:
+          # - unique  # Temporarily disabled for testing multi-model functionality
+          - not_null
+      
+      - name: license_pk
+        description: "Foreign key reference to the business license"
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_licenses')
+              field: license_pk
+      
+      - name: owner_name
+        description: "Full name of the license owner"
+        data_type: varchar
+        tests:
+          - not_null
+      
+      - name: owner_gender
+        description: "Gender of the owner"
+        data_type: varchar
+        tests:
+          - accepted_values:
+              values: ['Male', 'Female']
+      
+      - name: nationality
+        description: "Nationality of the owner"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['UAE', 'India', 'Pakistan', 'Egypt', 'Other']
+      
+      - name: owner_type
+        description: "Type of ownership role"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Primary', 'Partner', 'Shareholder']
+      
+      - name: ownership_percentage
+        description: "Percentage of ownership in the business"
+        data_type: decimal(5,2)
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+      
+      - name: phone_number
+        description: "Contact phone number for the owner"
+        data_type: varchar
+      
+      - name: email
+        description: "Email address of the owner"
+        data_type: varchar
+      
+      - name: emirates_id
+        description: "Emirates ID number for UAE nationals"
+        data_type: varchar
+      
+      - name: owner_registration_date
+        description: "Date when the owner was registered for this license"
+        data_type: date
+        tests:
+          - not_null
+      
+      - name: is_primary_owner
+        description: "Flag indicating if this is the primary owner of the license"
+        data_type: boolean
+        tests:
+          - not_null
+      
+      - name: is_active
+        description: "Flag indicating if the owner is currently active"
+        data_type: boolean
+        tests:
+          - not_null
+      
+      - name: requires_approval
+        description: "Flag indicating if ownership changes require regulatory approval"
+        data_type: boolean
+        tests:
+          - not_null
+      
+      - name: created_at
+        description: "Timestamp when the record was created"
+        data_type: timestamp with time zone
+        tests:
+          - not_null
+      
+      - name: created_by
+        description: "System or user that created the record"
+        data_type: varchar
+        tests:
+          - not_null

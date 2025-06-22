@@ -1,0 +1,103 @@
+mxcp: 1.0.0
+tool:
+  name: timeseries_license_owners
+  description: Analyze license_owners trends over time
+  parameters:
+  - name: timeField
+    type: string
+    description: Date field to analyze
+    enum:
+    - owner_registration_date
+    - created_at
+    - created_by
+    default: owner_registration_date
+  - name: granularity
+    type: string
+    description: Time granularity
+    enum:
+    - day
+    - week
+    - month
+    - quarter
+    - year
+    default: month
+  - name: startDate
+    type: string
+    format: date
+    description: Start date (YYYY-MM-DD)
+    default: null
+  - name: endDate
+    type: string
+    format: date
+    description: End date (YYYY-MM-DD)
+    default: null
+  - name: OwnerPk
+    type: string
+    description: Filter by owner_pk
+  - name: LicensePk
+    type: string
+    description: Filter by license_pk
+  - name: OwnerName
+    type: string
+    description: Filter by owner_name
+  - name: OwnerGender
+    type: string
+    description: Filter by owner_gender
+    enum:
+    - Male
+    - Female
+    - null
+  - name: Nationality
+    type: string
+    description: Filter by nationality
+    enum:
+    - UAE
+    - India
+    - Pakistan
+    - Egypt
+    - Other
+    - null
+  - name: OwnerType
+    type: string
+    description: Filter by owner_type
+    enum:
+    - Primary
+    - Partner
+    - Shareholder
+    - null
+  - name: OwnershipPercentage
+    type: string
+    description: Filter by ownership_percentage
+  - name: PhoneNumber
+    type: string
+    description: Filter by phone_number
+  - name: Email
+    type: string
+    description: Filter by email
+  - name: Emirates
+    type: string
+    description: Filter by emirates_id
+  - name: OwnerRegistrationDateFrom
+    type: string
+    format: date
+    description: Filter owner_registration_date from date (YYYY-MM-DD)
+  - name: OwnerRegistrationDateTo
+    type: string
+    format: date
+    description: Filter owner_registration_date to date (YYYY-MM-DD)
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        period:
+          type: string
+          format: date
+        count:
+          type: integer
+        unique_records:
+          type: integer
+  source:
+    file: ../sql/timeseries_license_owners.sql
+  enabled: true

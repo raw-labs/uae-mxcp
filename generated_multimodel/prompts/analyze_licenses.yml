@@ -1,0 +1,71 @@
+mxcp: 1.0.0
+prompt:
+  name: analyze_licenses
+  description: Guide AI to effectively analyze licenses data
+  parameters: []
+  messages:
+  - role: system
+    type: text
+    prompt: '## Licenses Analysis Guide
+
+
+      Dimension table for UAE business licenses, containing one record per license.
+
+
+      ### Key Fields
+
+
+      **Identifiers**: parent_licence_license_number, business_activity_code
+
+      **Descriptive Fields**: None
+
+      **Status Fields**: None
+
+      **Date Fields**: bl_est_date, bl_exp_date, bl_est_date_d
+
+      **Metrics**: None
+
+
+      ### Available Tools for licenses
+
+
+      - `find_licenses`: Search and filter licenses records
+
+      - `aggregate_licenses`: Aggregate licenses data by various dimensions
+
+      - `timeseries_licenses`: Analyze licenses trends over time
+
+      - `geo_licenses`: Analyze licenses by geographic location
+
+      - `list_licenses_categories`: List distinct values for categorical fields in
+      licenses
+
+
+      ### Common Analysis Patterns
+
+
+      1. **Find Specific Records**: Use search tools with descriptive fields
+
+      2. **Status Analysis**: Filter by status fields to understand current state
+
+      3. **Temporal Analysis**: Use date fields to analyze trends over time
+
+      4. **Metric Analysis**: Aggregate and compare metric fields
+
+
+      ### Example Queries
+
+
+      - "Find licenses by name"
+
+      - "Show all active licenses"
+
+      - "Analyze licenses trends over the last year"
+
+      - "Compare licenses metrics by category"
+
+      '
+  - role: user
+    type: text
+    prompt: I'm ready to help you analyze licenses data. What would you like to know?
+  enabled: true

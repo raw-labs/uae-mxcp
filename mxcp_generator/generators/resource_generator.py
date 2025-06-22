@@ -163,7 +163,7 @@ SELECT
   COUNT(*) as total_count,
   {', '.join(metrics)}
 FROM {entity.primary_model.name}_v1
-WHERE {' AND '.join(where_clauses) if where_clauses else '1=1'}
+WHERE 1=1
         """.strip()
         
         return {

@@ -1,0 +1,386 @@
+mxcp: 1.0.0
+tool:
+  name: find_licenses
+  description: Search and filter licenses records
+  parameters:
+  - name: LicensePk
+    type: string
+    description: Filter by license_pk
+    default: null
+  - name: Bl
+    type: string
+    description: Filter by bl
+    default: null
+  - name: BlCbls
+    type: string
+    description: Filter by bl_cbls
+    default: null
+  - name: EmirateNameEn
+    type: string
+    description: Filter by emirate_name_en
+    enum:
+    - Dubai
+    - Abu Dhabi
+    - Sharjah
+    - Ajman
+    - Ras Al Khaimah
+    - Fujairah
+    - Umm Al Quwain
+    - Umm Al-Quwain
+    - null
+    default: null
+  - name: EmirateNameAr
+    type: string
+    description: Filter by emirate_name_ar
+    default: null
+  - name: IssuanceAuthorityEn
+    type: string
+    description: Filter by issuance_authority_en
+    default: null
+  - name: IssuanceAuthorityAr
+    type: string
+    description: Filter by issuance_authority_ar
+    default: null
+  - name: IssuanceAuthorityBranchEn
+    type: string
+    description: Filter by issuance_authority_branch_en
+    default: null
+  - name: IssuanceAuthorityBranchAr
+    type: string
+    description: Filter by issuance_authority_branch_ar
+    default: null
+  - name: BlStatusEn
+    type: string
+    description: Filter by bl_status_en
+    enum:
+    - Active
+    - Expired
+    - Cancelled
+    - Current
+    - On Hold
+    - In  Active
+    - Inactive
+    - Blocked
+    - Suspended
+    - Under Liquidation
+    - Under Commercial Liquidation
+    - Under Commercial Liquidation.
+    - Under Commercial Liquida
+    - Under Commercial Mortgage
+    - null
+    default: null
+  - name: BlStatusAr
+    type: string
+    description: Filter by bl_status_ar
+    default: null
+  - name: BlNameEn
+    type: string
+    description: Filter by bl_name_en
+    default: null
+  - name: BlNameAr
+    type: string
+    description: Filter by bl_name_ar
+    default: null
+  - name: BlLegalTypeEn
+    type: string
+    description: Filter by bl_legal_type_en
+    default: null
+  - name: BlLegalTypeAr
+    type: string
+    description: Filter by bl_legal_type_ar
+    default: null
+  - name: BlEstDateFrom
+    type: string
+    format: date
+    description: Filter bl_est_date from date (YYYY-MM-DD)
+    default: null
+  - name: BlEstDateTo
+    type: string
+    format: date
+    description: Filter bl_est_date to date (YYYY-MM-DD)
+    default: null
+  - name: BlExpDateFrom
+    type: string
+    format: date
+    description: Filter bl_exp_date from date (YYYY-MM-DD)
+    default: null
+  - name: BlExpDateTo
+    type: string
+    format: date
+    description: Filter bl_exp_date to date (YYYY-MM-DD)
+    default: null
+  - name: BlTypeEn
+    type: string
+    description: Filter by bl_type_en
+    default: null
+  - name: BlTypeAr
+    type: string
+    description: Filter by bl_type_ar
+    default: null
+  - name: LicenseBranchFlag
+    type: string
+    description: Filter by license_branch_flag
+    enum:
+    - Y
+    - N
+    - null
+    default: null
+  - name: BlFullAddress
+    type: string
+    description: Filter by bl_full_address
+    default: null
+  - name: ParentLicenceLicenseNumber
+    type: string
+    description: Filter by parent_licence_license_number
+    default: null
+  - name: ParentLicenseIssuanceAuthorityEn
+    type: string
+    description: Filter by parent_license_issuance_authority_en
+    enum:
+    - ADGM
+    - Abu Dhabi Department of Economic Development
+    - DMCC
+    - Department of Economic Development
+    - Dubai Silicon Oasis Authority
+    - Dubai South
+    - KEZAD
+    - Municipality
+    - Sharjah Economic Development Department
+    - Sharjah Publishing City
+    - Abu Dhabi Airports Free Zone
+    - Umm Al Quwain Department of Economic Development
+    - Ras Al Khaimah Economic Zone (RAKEZ)
+    - Dibba Municipality
+    - Dubai Airport Free Zone Authority
+    - Ras Al Khaimah Tourism Development Authority
+    - Sharjah Airport International Free Zone Authority
+    - Dubai Department of Economy & Tourism
+    - Fujairah Municipality
+    - Ajman Department of Economic Development
+    - Ras Al Khaimah Department of Economic Development
+    - null
+    default: null
+  - name: ParentLicenseIssuanceAuthorityAr
+    type: string
+    description: Filter by parent_license_issuance_authority_ar
+    enum:
+    - "\u0628\u0644\u062F\u064A\u0629"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0623\u0628\
+      \u0648\u0638\u0628\u064A"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0627\u0644\
+      \u0634\u0627\u0631\u0642\u0629"
+    - "\u062F\u0628\u064A \u0627\u0644\u062C\u0646\u0648\u0628"
+    - "\u0633\u0644\u0637\u0629 \u0648\u0627\u062D\u0629 \u062F\u0628\u064A \u0644\
+      \u0644\u0633\u064A\u0644\u064A\u0643\u0648\u0646"
+    - "\u0633\u0648\u0642 \u0623\u0628\u0648\u0638\u0628\u064A \u0627\u0644\u0639\u0627\
+      \u0644\u0645\u064A"
+    - "\u0645\u062C\u0645\u0648\u0639\u0629 \u0643\u064A\u0632\u0627\u062F"
+    - "\u0645\u0631\u0643\u0632 \u062F\u0628\u064A \u0644\u0644\u0633\u0644\u0639\
+      \ \u0627\u0644\u0645\u062A\u0639\u062F\u062F\u0629"
+    - "\u0647\u064A\u0626\u0629 \u0645\u0646\u0627\u0637\u0642 \u0631\u0623\u0633\
+      \ \u0627\u0644\u062E\u064A\u0645\u0629 \u0627\u0644\u0627\u0642\u062A\u0635\u0627\
+      \u062F\u064A\u0629-\u0631\u0627\u0643\u0632"
+    - "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u062D\u0631\u0629 \u0628\
+      \u0645\u0637\u0627\u0631 \u062F\u0628\u064A - DAFZA"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0623\u0645\
+      \ \u0627\u0644\u0642\u064A\u0648\u064A\u0646"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0639\u062C\
+      \u0645\u0627\u0646"
+    - "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u062D\u0631\u0629 \u0644\
+      \u0645\u0637\u0627\u0631\u0627\u062A \u0623\u0628\u0648 \u0638\u0628\u064A -\
+      \ ADAFZ"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0625\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0627\u0644\
+      \u0634\u0627\u0631\u0642\u0629"
+    - "\u0628\u0644\u062F\u064A\u0629 \u062F\u0628\u0627 \u0627\u0644\u0641\u062C\u064A\
+      \u0631\u0629"
+    - "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u062D\u0631\u0629 \u0644\
+      \u0645\u0637\u0627\u0631 \u0627\u0644\u0634\u0627\u0631\u0642\u0629 \u0627\u0644\
+      \u062F\u0648\u0644\u064A"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0631\u0627\
+      \u0633 \u0627\u0644\u062E\u064A\u0645\u0629"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u0623\u0642\u062A\u0635\u0627\u062F\
+      \ \u0648\u0627\u0644\u0633\u064A\u0627\u062D\u0629 \u062F\u0628\u0649"
+    - "\u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u062A\u0646\u0645\u064A\u0629 \u0627\
+      \u0644\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629 \u0641\u064A \u0623\u0628\
+      \u0648 \u0638\u0628\u064A"
+    - "\u0628\u0644\u062F\u064A\u0629 \u0627\u0644\u0641\u062C\u064A\u0631\u0629"
+    - "\u0647\u064A\u0626\u0629 \u0631\u0623\u0633 \u0627\u0644\u062E\u064A\u0645\u0629\
+      \ \u0644\u062A\u0646\u0645\u064A\u0629 \u0627\u0644\u0633\u064A\u0627\u062D\u0629"
+    - null
+    default: null
+  - name: RelationshipTypeEn
+    type: string
+    description: Filter by relationship_type_en
+    default: null
+  - name: RelationshipTypeAr
+    type: string
+    description: Filter by relationship_type_ar
+    default: null
+  - name: OwnerNationalityAr
+    type: string
+    description: Filter by owner_nationality_ar
+    default: null
+  - name: OwnerGender
+    type: string
+    description: Filter by owner_gender
+    enum:
+    - Male
+    - Female
+    - UnKnown
+    - null
+    default: null
+  - name: OwnerNationalityEn
+    type: string
+    description: Filter by owner_nationality_en
+    default: null
+  - name: BusinessActivityCode
+    type: string
+    description: Filter by business_activity_code
+    default: null
+  - name: BusinessActivityDescEn
+    type: string
+    description: Filter by business_activity_desc_en
+    default: null
+  - name: BusinessActivityDescAr
+    type: string
+    description: Filter by business_activity_desc_ar
+    default: null
+  - name: LicenseLatitude
+    type: string
+    description: Filter by license_latitude
+    default: null
+  - name: LicenseLongitude
+    type: string
+    description: Filter by license_longitude
+    default: null
+  - name: LicenseLatitude1
+    type: string
+    description: Filter by license_latitude_1
+    default: null
+  - name: LicenseLongitude1
+    type: string
+    description: Filter by license_longitude_1
+    default: null
+  - name: BlEstDateDFrom
+    type: string
+    format: date
+    description: Filter bl_est_date_d from date (YYYY-MM-DD)
+    default: null
+  - name: BlEstDateDTo
+    type: string
+    format: date
+    description: Filter bl_est_date_d to date (YYYY-MM-DD)
+    default: null
+  - name: BlExpDateDFrom
+    type: string
+    format: date
+    description: Filter bl_exp_date_d from date (YYYY-MM-DD)
+    default: null
+  - name: BlExpDateDTo
+    type: string
+    format: date
+    description: Filter bl_exp_date_d to date (YYYY-MM-DD)
+    default: null
+  - name: LatDdMin
+    type: number
+    description: Minimum value for lat_dd
+    default: null
+  - name: LatDdMax
+    type: number
+    description: Maximum value for lat_dd
+    default: null
+  - name: LonDdMin
+    type: number
+    description: Minimum value for lon_dd
+    default: null
+  - name: LonDdMax
+    type: number
+    description: Maximum value for lon_dd
+    default: null
+  - name: limit
+    type: integer
+    description: Maximum number of records to return
+    default: 100
+  - name: offset
+    type: integer
+    description: Number of records to skip
+    default: 0
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        license_pk:
+          type: string
+          description: The unique primary key for each license, generated as a hash
+            of authority and license number.
+        bl:
+          type: string
+          description: 'The official business license number (BL #).'
+        bl_cbls:
+          type: string
+          description: The BL CBLS number.
+        emirate_name_en:
+          type: string
+          description: The English name of the Emirate where the license is registered.
+        emirate_name_ar:
+          type: string
+          description: The Arabic name of the Emirate where the license is registered.
+        issuance_authority_en:
+          type: string
+          description: The English name of the license issuing authority.
+        issuance_authority_ar:
+          type: string
+          description: The Arabic name of the license issuing authority.
+        issuance_authority_branch_en:
+          type: string
+          description: The English name of the issuing authority's branch.
+        issuance_authority_branch_ar:
+          type: string
+          description: The Arabic name of the issuing authority's branch.
+        bl_status_en:
+          type: string
+          description: The current status of the business license (e.g., Active, Expired).
+        bl_status_ar:
+          type: string
+          description: The current status of the business license in Arabic.
+        bl_name_en:
+          type: string
+          description: The English name of the business on the license.
+        bl_name_ar:
+          type: string
+          description: The Arabic name of the business on the license.
+        bl_legal_type_en:
+          type: string
+          description: The legal type of the business entity.
+        bl_legal_type_ar:
+          type: string
+          description: The legal type of the business entity in Arabic.
+        bl_est_date:
+          type: string
+          description: The establishment date of the license as a raw string.
+        bl_exp_date:
+          type: string
+          description: The expiration date of the license as a raw string.
+        bl_type_en:
+          type: string
+          description: The type of business license in English (e.g., Commercial,
+            Professional).
+        bl_type_ar:
+          type: string
+          description: The type of business license in Arabic.
+        license_branch_flag:
+          type: string
+          description: A flag indicating if the license is for a branch ('Y' or 'N').
+  source:
+    file: ../sql/find_licenses.sql
+  enabled: true

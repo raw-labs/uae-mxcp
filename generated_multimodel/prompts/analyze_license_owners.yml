@@ -1,0 +1,71 @@
+mxcp: 1.0.0
+prompt:
+  name: analyze_license_owners
+  description: Guide AI to effectively analyze license_owners data
+  parameters: []
+  messages:
+  - role: system
+    type: text
+    prompt: '## License Owners Analysis Guide
+
+
+      License ownership information - contains details about individuals and entities
+      that own business licenses
+
+
+      ### Key Fields
+
+
+      **Identifiers**: phone_number, emirates_id
+
+      **Descriptive Fields**: owner_name
+
+      **Status Fields**: is_primary_owner, is_active, requires_approval
+
+      **Date Fields**: owner_registration_date, created_at, created_by
+
+      **Metrics**: ownership_percentage
+
+
+      ### Available Tools for license_owners
+
+
+      - `find_license_owners`: Search and filter license_owners records
+
+      - `aggregate_license_owners`: Aggregate license_owners data by various dimensions
+
+      - `timeseries_license_owners`: Analyze license_owners trends over time
+
+      - `list_license_owners_categories`: List distinct values for categorical fields
+      in license_owners
+
+
+      ### Common Analysis Patterns
+
+
+      1. **Find Specific Records**: Use search tools with descriptive fields
+
+      2. **Status Analysis**: Filter by status fields to understand current state
+
+      3. **Temporal Analysis**: Use date fields to analyze trends over time
+
+      4. **Metric Analysis**: Aggregate and compare metric fields
+
+
+      ### Example Queries
+
+
+      - "Find license_owners by name"
+
+      - "Show all active license_owners"
+
+      - "Analyze license_owners trends over the last year"
+
+      - "Compare license_owners metrics by category"
+
+      '
+  - role: user
+    type: text
+    prompt: I'm ready to help you analyze license_owners data. What would you like
+      to know?
+  enabled: true

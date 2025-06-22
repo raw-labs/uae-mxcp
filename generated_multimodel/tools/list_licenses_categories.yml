@@ -1,0 +1,57 @@
+mxcp: 1.0.0
+tool:
+  name: list_licenses_categories
+  description: List distinct values for categorical fields in licenses
+  parameters:
+  - name: field
+    type: string
+    description: The categorical field to get values for
+    enum:
+    - license_pk
+    - bl
+    - bl_cbls
+    - emirate_name_en
+    - emirate_name_ar
+    - issuance_authority_en
+    - issuance_authority_ar
+    - issuance_authority_branch_en
+    - issuance_authority_branch_ar
+    - bl_status_en
+    - bl_status_ar
+    - bl_name_en
+    - bl_name_ar
+    - bl_legal_type_en
+    - bl_legal_type_ar
+    - bl_type_en
+    - bl_type_ar
+    - license_branch_flag
+    - parent_license_issuance_authority_en
+    - parent_license_issuance_authority_ar
+    - relationship_type_en
+    - relationship_type_ar
+    - owner_nationality_ar
+    - owner_gender
+    - owner_nationality_en
+    - business_activity_desc_en
+    - business_activity_desc_ar
+    - license_latitude
+    - license_longitude
+    - license_latitude_1
+    - license_longitude_1
+  - name: includeCount
+    type: boolean
+    description: Include count of records for each value
+    default: true
+  required: []
+  return:
+    type: array
+    items:
+      type: object
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
+  source:
+    file: ../sql/list_licenses_categories.sql
+  enabled: true
