@@ -81,7 +81,7 @@ class ResourceGenerator:
             
             # Check for expiry dates
             elif col.classification == ColumnClassification.TEMPORAL:
-                if 'expir' in col.name.lower() or 'end' in col.name.lower():
+                if 'expir' in col.name.lower() or 'end' in col.name.lower() or 'exp' in col.name.lower():
                     status_conditions.append(f"{col.name} > CURRENT_DATE")
         
         if not status_conditions:
@@ -230,7 +230,7 @@ ORDER BY COUNT(*) DESC
             if col.classification == ColumnClassification.IDENTIFIER:
                 return col.name
         
-        return "id"
+        return entity.columns[0].name if entity.columns else "id"
     
     def _get_order_column(self, entity: BusinessEntity) -> str:
         """Get appropriate ordering column"""
