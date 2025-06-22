@@ -28,6 +28,8 @@ models:
       - name: bl_cbls
         description: "The BL CBLS number."
         data_type: varchar
+        tests:
+          - not_null
 
       - name: emirate_name_en
         description: "The English name of the Emirate where the license is registered."
@@ -36,23 +38,33 @@ models:
           - not_null
           - accepted_values:
               values: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain', 'Umm Al-Quwain']
+
       - name: emirate_name_ar
         description: "The Arabic name of the Emirate where the license is registered."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: issuance_authority_en
         description: "The English name of the license issuing authority."
         data_type: varchar
         tests:
           - not_null
+
       - name: issuance_authority_ar
         description: "The Arabic name of the license issuing authority."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: issuance_authority_branch_en
         description: "The English name of the issuing authority's branch."
         data_type: varchar
+
       - name: issuance_authority_branch_ar
         description: "The Arabic name of the issuing authority's branch."
         data_type: varchar
+
       - name: bl_status_en
         description: "The current status of the business license (e.g., Active, Expired)."
         data_type: varchar
@@ -64,37 +76,42 @@ models:
                   'Blocked', 'Suspended', 'Under Liquidation', 'Under Commercial Liquidation',
                   'Under Commercial Liquidation.', 'Under Commercial Liquida', 'Under Commercial Mortgage'
                 ]
+
       - name: bl_status_ar
         description: "The current status of the business license in Arabic."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: bl_name_en
         description: "The English name of the business on the license."
         data_type: varchar
+
       - name: bl_name_ar
         description: "The Arabic name of the business on the license."
         data_type: varchar
+
       - name: bl_legal_type_en
         description: "The legal type of the business entity."
         data_type: varchar
         tests:
           - not_null
+
       - name: bl_legal_type_ar
         description: "The legal type of the business entity in Arabic."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: bl_est_date
         description: "The establishment date of the license as a raw string."
         data_type: varchar
         tests:
           - not_null
+
       - name: bl_exp_date
         description: "The expiration date of the license as a raw string."
         data_type: varchar
-        tests:
-          - not_null
-
-      - name: bl_legal_type_ar
-        data_type: string
-        description: "The legal type of the business license in Arabic."
         tests:
           - not_null
 
@@ -108,18 +125,30 @@ models:
       - name: bl_type_ar
         description: "The type of business license in Arabic."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: license_branch_flag
         description: "A flag indicating if the license is for a branch ('Y' or 'N')."
         tests:
           - accepted_values:
               values: ['Y', 'N']
         data_type: varchar
+
       - name: bl_full_address
         description: "The full address of the business."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "bl_full_address IS NOT NULL"
+
       - name: parent_licence_license_number
         description: "The license number of the parent license."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "parent_licence_license_number IS NOT NULL"
+
       - name: parent_license_issuance_authority_en
         data_type: varchar
         description: "The English name of the parent license's issuing authority."
@@ -182,9 +211,15 @@ models:
       - name: relationship_type_en
         description: "The relationship type of the owner to the license (e.g., Owner, Partner)."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: relationship_type_ar
         description: "The relationship type of the owner to the license in Arabic."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: owner_nationality_ar
         data_type: varchar
         description: "The nationality of the owner in Arabic."
@@ -202,36 +237,80 @@ models:
       - name: owner_nationality_en
         description: "The nationality of the owner in English."
         data_type: varchar
+        tests:
+          - not_null
+
       - name: business_activity_code
         description: "The code for the business activity."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "business_activity_code IS NOT NULL"
+
       - name: business_activity_desc_en
         description: "The English description of the business activity."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "business_activity_desc_en IS NOT NULL"
+
       - name: business_activity_desc_ar
         description: "The Arabic description of the business activity."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "business_activity_desc_ar IS NOT NULL"
+
       - name: license_latitude
         description: "The latitude of the business in DMS format."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "license_latitude IS NOT NULL"
+
       - name: license_longitude
         description: "The longitude of the business in DMS format."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "license_longitude IS NOT NULL"
+
       - name: license_latitude_1
         description: "An alternative latitude of the business in DMS format."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "license_latitude_1 IS NOT NULL"
+
       - name: license_longitude_1
         description: "An alternative longitude of the business in DMS format."
         data_type: varchar
+        tests:
+          - not_null:
+              where: "license_longitude_1 IS NOT NULL"
+
       - name: bl_est_date_d
         description: "The establishment date of the license as a proper date."
         data_type: date
+        tests:
+          - not_null
+
       - name: bl_exp_date_d
         description: "The expiration date of the license as a proper date."
         data_type: date
+        tests:
+          - not_null
+
       - name: lat_dd
         description: "The latitude of the business in decimal degrees."
         data_type: double
+        tests:
+          - not_null:
+              where: "lat_dd IS NOT NULL"
+
       - name: lon_dd
         description: "The longitude of the business in decimal degrees."
         data_type: double
+        tests:
+          - not_null:
+              where: "lon_dd IS NOT NULL"

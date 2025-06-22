@@ -338,3 +338,42 @@ tool:
   source:
     file: ../sql/find_licenses.sql
   enabled: true
+  tests:
+    - name: test_basic_search
+      description: Test basic search functionality returns results
+      arguments: {}
+      assertions:
+        - result_count: ">= 1"
+        - field_exists: "license_pk"
+        - field_exists: "bl"
+        - field_exists: "emirate_name_en"
+    
+    - name: test_emirate_filter
+      description: Test filtering by emirate
+      arguments:
+        - key: "EmirateNameEn"
+          value: "Dubai"
+      assertions:
+        - result_count: ">= 1"
+        - field_value_matches: 
+            field: "emirate_name_en"
+            value: "Dubai"
+    
+    - name: test_status_filter
+      description: Test filtering by license status
+      arguments:
+        - key: "BlStatusEn"
+          value: "Current"
+      assertions:
+        - result_count: ">= 1"
+        - field_value_matches:
+            field: "bl_status_en"
+            value: "Current"
+    
+    - name: test_limit_parameter
+      description: Test limit parameter works correctly
+      arguments:
+        - key: "limit"
+          value: 5
+      assertions:
+        - result_count: "<= 5"
