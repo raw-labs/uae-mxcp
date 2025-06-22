@@ -318,7 +318,7 @@ tool:
           description: The legal type of the business entity.
         bl_legal_type_ar:
           type: string
-          description: The legal type of the business license in Arabic.
+          description: The legal type of the business entity in Arabic.
         bl_est_date:
           type: string
           description: The establishment date of the license as a raw string.

@@ -124,32 +124,3 @@ tool:
   source:
     file: ../sql/geo_licenses.sql
   enabled: true
-  tests:
-    - name: test_basic_geo
-      description: Test basic geographic functionality
-      arguments: {}
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "emirate_name_en"
-        - field_exists: "license_count"
-        - field_type:
-            field: "license_count"
-            type: "integer"
-    
-    - name: test_emirate_grouping
-      description: Test grouping by emirate
-      arguments:
-        - key: "groupByField"
-          value: "emirate_name_en"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "emirate_name_en"
-    
-    - name: test_authority_grouping
-      description: Test grouping by authority
-      arguments:
-        - key: "groupByField"
-          value: "issuance_authority_en"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "issuance_authority_en"

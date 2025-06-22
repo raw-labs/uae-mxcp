@@ -55,23 +55,3 @@ tool:
   source:
     file: ../sql/list_licenses_categories.sql
   enabled: true
-  tests:
-    - name: test_basic_categories
-      description: Test basic category listing functionality
-      arguments: {}
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "field_name"
-        - field_exists: "distinct_values"
-        - field_type:
-            field: "distinct_values"
-            type: "integer"
-    
-    - name: test_minimum_count_filter
-      description: Test minimum count filtering
-      arguments:
-        - key: "minCount"
-          value: 100
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "field_name"

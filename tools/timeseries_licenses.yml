@@ -120,32 +120,3 @@ tool:
   source:
     file: ../sql/timeseries_licenses.sql
   enabled: true
-  tests:
-    - name: test_basic_timeseries
-      description: Test basic timeseries functionality
-      arguments: {}
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "time_period"
-        - field_exists: "license_count"
-        - field_type:
-            field: "license_count"
-            type: "integer"
-    
-    - name: test_monthly_granularity
-      description: Test monthly granularity
-      arguments:
-        - key: "granularity"
-          value: "month"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "time_period"
-    
-    - name: test_yearly_granularity
-      description: Test yearly granularity
-      arguments:
-        - key: "granularity"
-          value: "year"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "time_period"

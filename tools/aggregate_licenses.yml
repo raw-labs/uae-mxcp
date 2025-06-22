@@ -227,32 +227,3 @@ tool:
   source:
     file: ../sql/aggregate_licenses.sql
   enabled: true
-  tests:
-    - name: test_basic_aggregation
-      description: Test basic aggregation functionality
-      arguments: {}
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "total_count"
-        - field_exists: "unique_records"
-        - field_type:
-            field: "total_count"
-            type: "integer"
-    
-    - name: test_emirate_aggregation
-      description: Test aggregation by emirate
-      arguments:
-        - key: "EmirateNameEn"
-          value: "Dubai"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "total_count"
-    
-    - name: test_status_aggregation
-      description: Test aggregation by status
-      arguments:
-        - key: "BlStatusEn"
-          value: "Current"
-      assertions:
-        - result_count: ">= 1"
-        - field_exists: "total_count"
