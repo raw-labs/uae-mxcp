@@ -5,34 +5,34 @@ tests:
   params:
     LicensePk: test_value
     Bl: test_value
-    Cbls: test_value
-    EmirateNameEn: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
     EmirateNameAr: test_value
     IssuanceAuthorityEn: test_value
     IssuanceAuthorityAr: test_value
     IssuanceAuthorityBranchEn: test_value
     IssuanceAuthorityBranchAr: test_value
-    StatusEn: test_value
-    StatusAr: test_value
-    NameEn: test_value
-    NameAr: test_value
-    LegalTypeEn: test_value
-    LegalTypeAr: test_value
-    EstDateFrom: test_value
-    EstDateTo: test_value
-    ExpDateFrom: test_value
-    ExpDateTo: test_value
-    TypeEn: test_value
-    TypeAr: test_value
-    LicenseBranchFlag: test_value
-    FullAddress: test_value
+    BlStatusEn: Active
+    BlStatusAr: test_value
+    BlNameEn: test_value
+    BlNameAr: test_value
+    BlLegalTypeEn: test_value
+    BlLegalTypeAr: test_value
+    BlEstDateFrom: test_value
+    BlEstDateTo: test_value
+    BlExpDateFrom: test_value
+    BlExpDateTo: test_value
+    BlTypeEn: test_value
+    BlTypeAr: test_value
+    LicenseBranchFlag: Y
+    BlFullAddress: test_value
     ParentLicenceLicenseNumber: test_value
-    ParentLicenseIssuanceAuthorityEn: test_value
-    ParentLicenseIssuanceAuthorityAr: test_value
+    ParentLicenseIssuanceAuthorityEn: ADGM
+    ParentLicenseIssuanceAuthorityAr: "\u0628\u0644\u062F\u064A\u0629"
     RelationshipTypeEn: test_value
     RelationshipTypeAr: test_value
     OwnerNationalityAr: test_value
-    OwnerGender: test_value
+    OwnerGender: Male
     OwnerNationalityEn: test_value
     BusinessActivityCode: test_value
     BusinessActivityDescEn: test_value
@@ -41,10 +41,10 @@ tests:
     LicenseLongitude: test_value
     LicenseLatitude1: test_value
     LicenseLongitude1: test_value
-    EstDateDFrom: test_value
-    EstDateDTo: test_value
-    ExpDateDFrom: test_value
-    ExpDateDTo: test_value
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
     limit: 1
     offset: 1
   assertions:
@@ -64,21 +64,21 @@ tests:
   params:
     groupByLicensePk: true
     groupByBl: true
-    groupByCbls: true
+    groupByBlCbls: true
     groupByEmirateNameEn: true
     groupByEmirateNameAr: true
     groupByIssuanceAuthorityEn: true
     groupByIssuanceAuthorityAr: true
     groupByIssuanceAuthorityBranchEn: true
     groupByIssuanceAuthorityBranchAr: true
-    groupByStatusEn: true
-    groupByStatusAr: true
-    groupByNameEn: true
-    groupByNameAr: true
-    groupByLegalTypeEn: true
-    groupByLegalTypeAr: true
-    groupByTypeEn: true
-    groupByTypeAr: true
+    groupByBlStatusEn: true
+    groupByBlStatusAr: true
+    groupByBlNameEn: true
+    groupByBlNameAr: true
+    groupByBlLegalTypeEn: true
+    groupByBlLegalTypeAr: true
+    groupByBlTypeEn: true
+    groupByBlTypeAr: true
     groupByLicenseBranchFlag: true
     groupByParentLicenseIssuanceAuthorityEn: true
     groupByParentLicenseIssuanceAuthorityAr: true
@@ -93,25 +93,25 @@ tests:
     groupByLicenseLongitude: true
     groupByLicenseLatitude1: true
     groupByLicenseLongitude1: true
-    groupByEstDate: true
-    groupByExpDate: true
-    groupByFullAddress: true
+    groupByBlEstDate: true
+    groupByBlExpDate: true
+    groupByBlFullAddress: true
     groupByParentLicenceLicenseNumber: true
     groupByBusinessActivityCode: true
-    filterLicensePk: test_value
-    filterBl: test_value
-    filterCbls: test_value
-    filterEmirateNameEn: test_value
-    filterEmirateNameAr: test_value
-    filterIssuanceAuthorityEn: test_value
-    filterIssuanceAuthorityAr: test_value
-    filterIssuanceAuthorityBranchEn: test_value
-    filterIssuanceAuthorityBranchAr: test_value
-    filterStatusEn: test_value
-    EstDateFrom: test_value
-    EstDateTo: test_value
-    ExpDateFrom: test_value
-    ExpDateTo: test_value
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
   assertions:
   - type: status
     value: success
@@ -131,20 +131,20 @@ tests:
     granularity: day
     startDate: test_value
     endDate: test_value
-    filterLicensePk: test_value
-    filterBl: test_value
-    filterCbls: test_value
-    filterEmirateNameEn: test_value
-    filterEmirateNameAr: test_value
-    filterIssuanceAuthorityEn: test_value
-    filterIssuanceAuthorityAr: test_value
-    filterIssuanceAuthorityBranchEn: test_value
-    filterIssuanceAuthorityBranchAr: test_value
-    filterStatusEn: test_value
-    EstDateFrom: test_value
-    EstDateTo: test_value
-    ExpDateFrom: test_value
-    ExpDateTo: test_value
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
   assertions:
   - type: status
     value: success
@@ -162,20 +162,20 @@ tests:
   params:
     groupByField: bl_full_address
     includeCoordinates: true
-    filterLicensePk: test_value
-    filterBl: test_value
-    filterCbls: test_value
-    filterEmirateNameEn: test_value
-    filterEmirateNameAr: test_value
-    filterIssuanceAuthorityEn: test_value
-    filterIssuanceAuthorityAr: test_value
-    filterIssuanceAuthorityBranchEn: test_value
-    filterIssuanceAuthorityBranchAr: test_value
-    filterStatusEn: test_value
-    EstDateFrom: test_value
-    EstDateTo: test_value
-    ExpDateFrom: test_value
-    ExpDateTo: test_value
+    LicensePk: test_value
+    Bl: test_value
+    BlCbls: test_value
+    EmirateNameEn: Dubai
+    EmirateNameAr: test_value
+    IssuanceAuthorityEn: test_value
+    IssuanceAuthorityAr: test_value
+    IssuanceAuthorityBranchEn: test_value
+    IssuanceAuthorityBranchAr: test_value
+    BlStatusEn: Active
+    BlEstDateDFrom: test_value
+    BlEstDateDTo: test_value
+    BlExpDateDFrom: test_value
+    BlExpDateDTo: test_value
   assertions:
   - type: status
     value: success

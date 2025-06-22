@@ -129,12 +129,16 @@ class MCPGenerator:
         if hasattr(self.tool_generator, 'get_sql_queries'):
             sql_queries = self.tool_generator.get_sql_queries()
         
-        # Write tools
+        # Write tools (with test preservation)
         for tool in self.tools:
             tool_name = tool['tool']['name']
             file_path = tools_dir / f"{tool_name}.yml"
+            
+            # Merge existing tests before writing
+            merged_tool = self._merge_existing_tests(tool, file_path)
+            
             with open(file_path, 'w') as f:
-                yaml.dump(tool, f, default_flow_style=False, sort_keys=False)
+                yaml.dump(merged_tool, f, default_flow_style=False, sort_keys=False)
             
             # Write corresponding SQL file if it exists
             if tool_name in sql_queries:
@@ -282,4 +286,48 @@ class MCPGenerator:
     def _write_json(self, path: Path, data: Dict):
         """Write data as JSON file."""
         with open(path, 'w') as f:
-            json.dump(data, f, indent=2) 
+            json.dump(data, f, indent=2)
+
+    def _merge_existing_tests(self, new_tool: Dict[str, Any], existing_file_path: Path) -> Dict[str, Any]:
+        """
+        Merge existing manually written tests with new tool definition.
+        
+        Args:
+            new_tool: The newly generated tool definition
+            existing_file_path: Path to existing tool file
+            
+        Returns:
+            Tool definition with preserved existing tests
+        """
+        if not existing_file_path.exists():
+            logger.debug(f"No existing file found at {existing_file_path}, using new tool as-is")
+            return new_tool
+        
+        try:
+            # Load existing tool definition
+            with open(existing_file_path, 'r') as f:
+                existing_tool = yaml.safe_load(f)
+            
+            # Check if existing tool has tests
+            if (existing_tool and 
+                'tool' in existing_tool and 
+                'tests' in existing_tool['tool'] and 
+                existing_tool['tool']['tests']):
+                
+                existing_tests = existing_tool['tool']['tests']
+                logger.info(f"Preserving {len(existing_tests)} existing tests for {new_tool['tool']['name']}")
+                
+                # Preserve existing tests in the new tool
+                new_tool['tool']['tests'] = existing_tests
+                
+                # Log which tests are being preserved
+                test_names = [test.get('name', 'unnamed') for test in existing_tests]
+                logger.debug(f"Preserved tests: {', '.join(test_names)}")
+            else:
+                logger.debug(f"No existing tests found in {existing_file_path}")
+                
+        except Exception as e:
+            logger.warning(f"Failed to merge existing tests from {existing_file_path}: {e}")
+            logger.warning("Using new tool definition without existing tests")
+        
+        return new_tool 

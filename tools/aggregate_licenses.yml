@@ -227,3 +227,12 @@ tool:
   source:
     file: ../sql/aggregate_licenses.sql
   enabled: true
+  tests:
+  - name: test_manual_aggregation
+    description: Manual aggregation test that should be preserved
+    arguments:
+    - key: groupByEmirateNameEn
+      value: true
+    - key: EmirateNameEn
+      value: Dubai
+    result: data_returned

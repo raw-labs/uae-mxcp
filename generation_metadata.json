@@ -1,11 +1,11 @@
 {
   "version": "0.1.0",
-  "generation_timestamp": "2025-06-21T15:52:40.700236",
+  "generation_timestamp": "2025-06-22T23:18:21.252946",
   "dbt_manifest": "target/manifest.json",
   "statistics": {
     "entities_detected": 1,
     "tools_generated": 5,
-    "resources_generated": 0,
+    "resources_generated": 1,
     "prompts_generated": 2,
     "tests_generated": 10
   },

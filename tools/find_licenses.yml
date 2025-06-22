@@ -6,12 +6,15 @@ tool:
   - name: LicensePk
     type: string
     description: Filter by license_pk
+    default: null
   - name: Bl
     type: string
     description: Filter by bl
+    default: null
   - name: BlCbls
     type: string
     description: Filter by bl_cbls
+    default: null
   - name: EmirateNameEn
     type: string
     description: Filter by emirate_name_en
@@ -25,21 +28,27 @@ tool:
     - Umm Al Quwain
     - Umm Al-Quwain
     - null
+    default: null
   - name: EmirateNameAr
     type: string
     description: Filter by emirate_name_ar
+    default: null
   - name: IssuanceAuthorityEn
     type: string
     description: Filter by issuance_authority_en
+    default: null
   - name: IssuanceAuthorityAr
     type: string
     description: Filter by issuance_authority_ar
+    default: null
   - name: IssuanceAuthorityBranchEn
     type: string
     description: Filter by issuance_authority_branch_en
+    default: null
   - name: IssuanceAuthorityBranchAr
     type: string
     description: Filter by issuance_authority_branch_ar
+    default: null
   - name: BlStatusEn
     type: string
     description: Filter by bl_status_en
@@ -59,43 +68,55 @@ tool:
     - Under Commercial Liquida
     - Under Commercial Mortgage
     - null
+    default: null
   - name: BlStatusAr
     type: string
     description: Filter by bl_status_ar
+    default: null
   - name: BlNameEn
     type: string
     description: Filter by bl_name_en
+    default: null
   - name: BlNameAr
     type: string
     description: Filter by bl_name_ar
+    default: null
   - name: BlLegalTypeEn
     type: string
     description: Filter by bl_legal_type_en
+    default: null
   - name: BlLegalTypeAr
     type: string
     description: Filter by bl_legal_type_ar
+    default: null
   - name: BlEstDateFrom
     type: string
     format: date
     description: Filter bl_est_date from date (YYYY-MM-DD)
+    default: null
   - name: BlEstDateTo
     type: string
     format: date
     description: Filter bl_est_date to date (YYYY-MM-DD)
+    default: null
   - name: BlExpDateFrom
     type: string
     format: date
     description: Filter bl_exp_date from date (YYYY-MM-DD)
+    default: null
   - name: BlExpDateTo
     type: string
     format: date
     description: Filter bl_exp_date to date (YYYY-MM-DD)
+    default: null
   - name: BlTypeEn
     type: string
     description: Filter by bl_type_en
+    default: null
   - name: BlTypeAr
     type: string
     description: Filter by bl_type_ar
+    default: null
   - name: LicenseBranchFlag
     type: string
     description: Filter by license_branch_flag
@@ -103,12 +124,15 @@ tool:
     - Y
     - N
     - null
+    default: null
   - name: BlFullAddress
     type: string
     description: Filter by bl_full_address
+    default: null
   - name: ParentLicenceLicenseNumber
     type: string
     description: Filter by parent_licence_license_number
+    default: null
   - name: ParentLicenseIssuanceAuthorityEn
     type: string
     description: Filter by parent_license_issuance_authority_en
@@ -135,6 +159,7 @@ tool:
     - Ajman Department of Economic Development
     - Ras Al Khaimah Department of Economic Development
     - null
+    default: null
   - name: ParentLicenseIssuanceAuthorityAr
     type: string
     description: Filter by parent_license_issuance_authority_ar
@@ -190,15 +215,19 @@ tool:
     - "\u0647\u064A\u0626\u0629 \u0631\u0623\u0633 \u0627\u0644\u062E\u064A\u0645\u0629\
       \ \u0644\u062A\u0646\u0645\u064A\u0629 \u0627\u0644\u0633\u064A\u0627\u062D\u0629"
     - null
+    default: null
   - name: RelationshipTypeEn
     type: string
     description: Filter by relationship_type_en
+    default: null
   - name: RelationshipTypeAr
     type: string
     description: Filter by relationship_type_ar
+    default: null
   - name: OwnerNationalityAr
     type: string
     description: Filter by owner_nationality_ar
+    default: null
   - name: OwnerGender
     type: string
     description: Filter by owner_gender
@@ -207,58 +236,75 @@ tool:
     - Female
     - UnKnown
     - null
+    default: null
   - name: OwnerNationalityEn
     type: string
     description: Filter by owner_nationality_en
+    default: null
   - name: BusinessActivityCode
     type: string
     description: Filter by business_activity_code
+    default: null
   - name: BusinessActivityDescEn
     type: string
     description: Filter by business_activity_desc_en
+    default: null
   - name: BusinessActivityDescAr
     type: string
     description: Filter by business_activity_desc_ar
+    default: null
   - name: LicenseLatitude
     type: string
     description: Filter by license_latitude
+    default: null
   - name: LicenseLongitude
     type: string
     description: Filter by license_longitude
+    default: null
   - name: LicenseLatitude1
     type: string
     description: Filter by license_latitude_1
+    default: null
   - name: LicenseLongitude1
     type: string
     description: Filter by license_longitude_1
+    default: null
   - name: BlEstDateDFrom
     type: string
     format: date
     description: Filter bl_est_date_d from date (YYYY-MM-DD)
+    default: null
   - name: BlEstDateDTo
     type: string
     format: date
     description: Filter bl_est_date_d to date (YYYY-MM-DD)
+    default: null
   - name: BlExpDateDFrom
     type: string
     format: date
     description: Filter bl_exp_date_d from date (YYYY-MM-DD)
+    default: null
   - name: BlExpDateDTo
     type: string
     format: date
     description: Filter bl_exp_date_d to date (YYYY-MM-DD)
+    default: null
   - name: LatDdMin
     type: number
     description: Minimum value for lat_dd
+    default: null
   - name: LatDdMax
     type: number
     description: Maximum value for lat_dd
+    default: null
   - name: LonDdMin
     type: number
     description: Minimum value for lon_dd
+    default: null
   - name: LonDdMax
     type: number
     description: Maximum value for lon_dd
+    default: null
   - name: limit
     type: integer
     description: Maximum number of records to return
@@ -338,3 +384,20 @@ tool:
   source:
     file: ../sql/find_licenses.sql
   enabled: true
+  tests:
+  - name: test_manual_search
+    description: Manual test that should be preserved during regeneration
+    arguments:
+    - key: EmirateNameEn
+      value: Dubai
+    - key: limit
+      value: 5
+    result: success
+  - name: test_manual_status_filter
+    description: Another manual test to preserve
+    arguments:
+    - key: BlStatusEn
+      value: Current
+    - key: limit
+      value: 3
+    result: success

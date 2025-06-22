@@ -85,13 +85,15 @@ class ToolGenerator:
                         "name": f"{param_name}From",
                         "type": "string",
                         "format": "date",
-                        "description": f"Filter {col.name} from date (YYYY-MM-DD)"
+                        "description": f"Filter {col.name} from date (YYYY-MM-DD)",
+                        "default": None
                     },
                     {
                         "name": f"{param_name}To",
                         "type": "string",
                         "format": "date",
-                        "description": f"Filter {col.name} to date (YYYY-MM-DD)"
+                        "description": f"Filter {col.name} to date (YYYY-MM-DD)",
+                        "default": None
                     }
                 ])
                 
@@ -108,12 +110,14 @@ class ToolGenerator:
                     {
                         "name": f"{param_name}Min",
                         "type": "number",
-                        "description": f"Minimum value for {col.name}"
+                        "description": f"Minimum value for {col.name}",
+                        "default": None
                     },
                     {
                         "name": f"{param_name}Max",
                         "type": "number",
-                        "description": f"Maximum value for {col.name}"
+                        "description": f"Maximum value for {col.name}",
+                        "default": None
                     }
                 ])
                 where_conditions.extend([
@@ -132,6 +136,9 @@ class ToolGenerator:
                 # Add enum values if available (include null for optional parameters)
                 if col.enum_values:
                     param_def["enum"] = col.enum_values + [None]
+                
+                # Add default null to make parameter optional
+                param_def["default"] = None
                 
                 parameters.append(param_def)
                 
