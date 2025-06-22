@@ -151,15 +151,50 @@ class SemanticAnalyzer:
         """Parse dbt models from manifest"""
         models = {}
         
+        # First, extract test information
+        column_tests = {}  # model_name -> column_name -> tests
+        for node_id, node in manifest.get('nodes', {}).items():
+            if node.get('resource_type') == 'test':
+                test_metadata = node.get('test_metadata', {})
+                if test_metadata.get('name') == 'accepted_values':
+                    # Extract model and column info
+                    attached_node = node.get('attached_node', '')
+                    column_name = node.get('column_name', '')
+                    values = test_metadata.get('kwargs', {}).get('values', [])
+                    
+                    # Extract model name from attached_node (e.g., "model.project.dim_licenses.v1")
+                    if attached_node and column_name and values:
+                        parts = attached_node.split('.')
+                        if len(parts) >= 3:
+                            model_name = parts[2]  # Get the model name
+                            if model_name not in column_tests:
+                                column_tests[model_name] = {}
+                            if column_name not in column_tests[model_name]:
+                                column_tests[model_name][column_name] = []
+                            column_tests[model_name][column_name].extend(values)
+        
+        # Now parse models and enrich with test data
         for node_id, node in manifest.get('nodes', {}).items():
             if node.get('resource_type') == 'model':
                 # Only process mart models
                 if 'marts' in node.get('path', ''):
+                    model_name = node['name']
+                    columns = node.get('columns', {})
+                    
+                    # Enrich columns with enum values from tests
+                    if model_name in column_tests:
+                        for col_name, col_info in columns.items():
+                            if col_name in column_tests[model_name]:
+                                # Add enum values to column info
+                                if 'enum_values' not in col_info:
+                                    col_info['enum_values'] = []
+                                col_info['enum_values'] = column_tests[model_name][col_name]
+                    
                     model = DbtModel(
-                        name=node['name'],
+                        name=model_name,
                         schema=node.get('schema', 'public'),
                         description=node.get('description'),
-                        columns=node.get('columns', {}),
+                        columns=columns,
                         tags=node.get('tags', []),
                         meta=node.get('meta', {})
                     )
@@ -243,6 +278,11 @@ class SemanticAnalyzer:
     
     def _has_enum_values(self, col_info: Dict) -> bool:
         """Check if column has enum values from tests"""
+        # Check if enum_values were added from manifest parsing
+        if col_info.get('enum_values'):
+            return True
+            
+        # Legacy check for tests in column definition
         for test in col_info.get('tests', []):
             if isinstance(test, dict) and 'accepted_values' in test:
                 return True
@@ -252,7 +292,11 @@ class SemanticAnalyzer:
         """Extract enum values from column tests"""
         enum_values = []
         
-        # Look for accepted_values test
+        # First check if enum_values were added from manifest parsing
+        if 'enum_values' in col_info:
+            return col_info['enum_values']
+        
+        # Legacy: Look for accepted_values test in column definition
         for test in col_info.get('tests', []):
             if isinstance(test, dict) and 'accepted_values' in test:
                 values = test['accepted_values'].get('values', [])
