@@ -129,9 +129,9 @@ class ToolGenerator:
                     "description": f"Filter by {col.name}"
                 }
                 
-                # Add enum values if available
+                # Add enum values if available (include null for optional parameters)
                 if col.enum_values:
-                    param_def["enum"] = col.enum_values
+                    param_def["enum"] = col.enum_values + [None]
                 
                 parameters.append(param_def)
                 
@@ -171,25 +171,30 @@ OFFSET $offset
         # Store SQL separately
         self.sql_queries[tool_name] = sql
         
-        return {
+        return_schema = {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": self._generate_return_properties(entity)
+            }
+        }
+        
+        tool_def = {
             "mxcp": self.version,
             "tool": {
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
-                "return": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": self._generate_return_properties(entity)
-                    }
-                },
+                "required": [],  # No required parameters for search
+                "return": return_schema,
                 "source": {
                     "file": f"../sql/{tool_name}.sql"
                 },
                 "enabled": True
             }
         }
+        
+        return tool_def
     
     def _generate_analytics_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
         """Generate analytics tool for entities with metrics"""
@@ -264,6 +269,7 @@ FROM {entity.primary_model.name}_v1
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
+                "required": [],  # No required parameters for analytics
                 "return": {
                     "type": "array",
                     "items": {
@@ -351,12 +357,12 @@ LIMIT 100
             lang_suffix = "Ar"
             name = name[:-3]
         
-        # Remove entity-specific prefixes
-        for prefix in ['bl_', 'dim_', 'fact_']:
+        # Remove common entity prefixes (generic patterns)
+        for prefix in ['dim_', 'fact_', 'bridge_']:
             if name.startswith(prefix):
                 name = name[len(prefix):]
         
-        # Remove other common suffixes (but not language ones)
+        # Remove common suffixes (but not language ones)
         for suffix in ['_id', '_key']:
             if name.endswith(suffix):
                 name = name[:-len(suffix)]
@@ -379,61 +385,89 @@ LIMIT 100
         return self._get_primary_key(entity)
     
     def _get_primary_key(self, entity: BusinessEntity) -> str:
-        """Get primary key column name"""
+        """Find the primary key field for the entity"""
+        # Look for common primary key patterns
         for col in entity.columns:
-            if col.is_primary_key:
+            col_lower = col.name.lower()
+            
+            # Common PK patterns
+            if col_lower in ['id', 'pk', 'key']:
+                return col.name
+            
+            # Entity-specific patterns like table_pk, table_id
+            entity_lower = entity.name.lower()
+            if col_lower in [f"{entity_lower}_pk", f"{entity_lower}_id", f"{entity_lower}_key"]:
+                return col.name
+            
+            # Generic patterns
+            if col_lower.endswith('_pk') or col_lower.endswith('_id') or col_lower.endswith('_key'):
                 return col.name
         
-        # Fallback to first identifier
+        # Fallback to first identifier field
         for col in entity.columns:
             if col.classification == ColumnClassification.IDENTIFIER:
                 return col.name
         
-        return entity.columns[0].name if entity.columns else "id"
+        # Last resort - use first column
+        return entity.columns[0].name if entity.columns else 'id'
     
     def _generate_common_filter_parameters(self, entity: BusinessEntity, limit: int = 10) -> List[Dict[str, Any]]:
-        """Generate common filter parameters that can be added to any tool"""
+        """Generate common filter parameters for tools"""
         parameters = []
         
-        # Add filters for key categorical fields
-        categorical_fields = [
-            col for col in entity.columns
-            if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
-        ]
-        
-        for field in categorical_fields[:limit]:
-            param_name = f"filter{self._to_business_name(field.name)}"
+        # Add parameters for all columns (up to limit), making them all optional
+        for col in entity.columns[:limit]:
+            param_name = self._to_business_name(col.name)
+            
             param_def = {
                 "name": param_name,
-                "type": "string",
-                "description": f"Filter by {self._to_business_name(field.name)}",
+                "type": self._get_parameter_type(col),
+                "description": f"Filter by {col.name}"
             }
-            if field.enum_values:
-                param_def["enum"] = field.enum_values
+            
+            # Add enum values if available (include null for optional parameters)
+            if col.enum_values:
+                param_def["enum"] = col.enum_values + [None]
+            
+            # Add format for date strings
+            if col.data_type.lower() in ['varchar', 'text'] and 'date' in col.name.lower():
+                param_def["format"] = "date"
+                
             parameters.append(param_def)
         
-        # Add date range filters for temporal fields
-        temporal_fields = [
-            col for col in entity.columns
-            if col.classification == ColumnClassification.TEMPORAL
-        ]
-        
-        for field in temporal_fields[:2]:  # Limit to 2 most important date fields
-            param_base = self._to_business_name(field.name)
-            parameters.extend([
-                {
-                    "name": f"{param_base}From",
-                    "type": "string",
-                    "format": "date",
-                    "description": f"Filter {param_base} from date (YYYY-MM-DD)"
-                },
-                {
-                    "name": f"{param_base}To",
-                    "type": "string",
-                    "format": "date",
-                    "description": f"Filter {param_base} to date (YYYY-MM-DD)"
-                }
-            ])
+        # Add range parameters for numeric/date fields
+        for col in entity.columns:
+            if col.classification in [ColumnClassification.TEMPORAL, ColumnClassification.METRIC]:
+                param_name = self._to_business_name(col.name)
+                
+                if col.data_type.upper() == 'DATE':
+                    parameters.extend([
+                        {
+                            "name": f"{param_name}From",
+                            "type": "string",
+                            "format": "date",
+                            "description": f"Filter {col.name} from date (YYYY-MM-DD)"
+                        },
+                        {
+                            "name": f"{param_name}To", 
+                            "type": "string",
+                            "format": "date",
+                            "description": f"Filter {col.name} to date (YYYY-MM-DD)"
+                        }
+                    ])
+                elif col.data_type.upper() in ['INTEGER', 'BIGINT', 'DOUBLE', 'FLOAT', 'DECIMAL']:
+                    parameters.extend([
+                        {
+                            "name": f"{param_name}Min",
+                            "type": "number",
+                            "description": f"Minimum value for {col.name}"
+                        },
+                        {
+                            "name": f"{param_name}Max",
+                            "type": "number", 
+                            "description": f"Maximum value for {col.name}"
+                        }
+                    ])
         
         return parameters
     
@@ -441,39 +475,48 @@ LIMIT 100
         """Generate WHERE clauses for common filters"""
         where_clauses = []
         
-        # Add filters for categorical fields
+        # Add filters for categorical fields using same naming as search tool
         categorical_fields = [
             col for col in entity.columns
             if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
         ]
         
         for field in categorical_fields[:limit]:
-            param_name = f"filter{self._to_business_name(field.name)}"
+            param_name = self._to_business_name(field.name)  # Same as search tool
             where_clauses.append(
                 f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
             )
         
-        # Add date range filters
+        # Add date range filters using same naming as search tool
         temporal_fields = [
             col for col in entity.columns
             if col.classification == ColumnClassification.TEMPORAL
         ]
         
         for field in temporal_fields[:2]:
-            param_base = self._to_business_name(field.name)
-            # Handle both string and date fields
+            # Use the actual field name for parameter generation (including _d suffix if present)
             if field.data_type.lower() == 'date':
+                param_base = self._to_business_name(field.name)
                 where_clauses.extend([
                     f"  AND (${param_base}From IS NULL OR {field.name} >= ${param_base}From::DATE)",
                     f"  AND (${param_base}To IS NULL OR {field.name} <= ${param_base}To::DATE)"
                 ])
             else:
-                # For string date fields, use the _d version if available
-                date_field = field.name.replace('_date', '_date_d')
-                where_clauses.extend([
-                    f"  AND (${param_base}From IS NULL OR {date_field} >= ${param_base}From::DATE)",
-                    f"  AND (${param_base}To IS NULL OR {date_field} <= ${param_base}To::DATE)"
-                ])
+                # For string date fields, check if _d version exists and use it
+                date_field = f"{field.name}_d"
+                if any(col.name == date_field for col in entity.columns):
+                    param_base = self._to_business_name(date_field)  # Use _d version for param name
+                    where_clauses.extend([
+                        f"  AND (${param_base}From IS NULL OR {date_field} >= ${param_base}From::DATE)",
+                        f"  AND (${param_base}To IS NULL OR {date_field} <= ${param_base}To::DATE)"
+                    ])
+                else:
+                    # Fallback to original field
+                    param_base = self._to_business_name(field.name)
+                    where_clauses.extend([
+                        f"  AND (${param_base}From IS NULL OR {field.name} >= ${param_base}From::DATE)",
+                        f"  AND (${param_base}To IS NULL OR {field.name} <= ${param_base}To::DATE)"
+                    ])
         
         return where_clauses
     
@@ -548,11 +591,11 @@ LIMIT 100
                 "default": False
             })
         
-        # Add common filters
-        parameters.extend(self._generate_common_filter_parameters(entity))
+        # Add common filters using same method as search tool
+        parameters.extend(self._generate_common_filter_parameters(entity, limit=10))
         
         # Build dynamic SQL
-        select_columns = ["COUNT(*) as total_count", "COUNT(DISTINCT license_pk) as unique_licenses"]
+        select_columns = ["COUNT(*) as total_count", f"COUNT(DISTINCT {self._get_primary_key(entity)}) as unique_records"]
         
         # Add dynamic group by columns based on parameters
         for i, field in enumerate(all_groupable_fields):
@@ -583,6 +626,7 @@ LIMIT 100
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
+                "required": [],  # No required parameters for aggregation
                 "return": {
                     "type": "array",
                     "items": {
@@ -640,41 +684,58 @@ LIMIT 100
             }
         ]
         
-        # Add common filters
-        parameters.extend(self._generate_common_filter_parameters(entity))
+        # Add common filters using same method as search tool
+        parameters.extend(self._generate_common_filter_parameters(entity, limit=10))
         
         # Get common where clauses
         where_clauses = self._generate_common_where_clauses(entity)
         
-        # Build SQL
+        # Build SQL - use dynamic field selection
+        primary_key = self._get_primary_key(entity)
+        
+        # Create dynamic CASE statement for all temporal fields
+        temporal_field_cases = []
+        for field in temporal_fields:
+            # Use the proper date field (prefer _d version if available)
+            actual_field = field.name
+            if field.data_type.lower() != 'date':
+                # Check if there's a _d version
+                date_version = f"{field.name}_d"
+                if any(col.name == date_version for col in entity.columns):
+                    actual_field = date_version
+            temporal_field_cases.append(f"    WHEN $timeField = '{field.name}' THEN {actual_field}")
+        
+        # Fallback to first temporal field
+        default_field = temporal_fields[0].name
+        if temporal_fields[0].data_type.lower() != 'date':
+            date_version = f"{temporal_fields[0].name}_d"
+            if any(col.name == date_version for col in entity.columns):
+                default_field = date_version
+        
         sql = f"""
 SELECT
   DATE_TRUNC($granularity, 
     CASE 
-      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+{chr(10).join(temporal_field_cases)}
+      ELSE {default_field}
     END
   ) as period,
   COUNT(*) as count,
-  COUNT(DISTINCT license_pk) as unique_licenses
+  COUNT(DISTINCT {primary_key}) as unique_records
 FROM {entity.primary_model.name}_v1
 WHERE CASE 
-    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-    ELSE bl_est_date_d
+{chr(10).join(temporal_field_cases)}
+      ELSE {default_field}
   END IS NOT NULL
   AND ($startDate IS NULL OR 
     CASE 
-      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+{chr(10).join(temporal_field_cases)}
+      ELSE {default_field}
     END >= $startDate::DATE)
   AND ($endDate IS NULL OR 
     CASE 
-      WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-      WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+{chr(10).join(temporal_field_cases)}
+      ELSE {default_field}
     END <= $endDate::DATE)
 {chr(10).join(where_clauses)}
 GROUP BY period
@@ -690,6 +751,7 @@ ORDER BY period DESC
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
+                "required": [],  # No required parameters for time series
                 "return": {
                     "type": "array",
                     "items": {
@@ -697,7 +759,7 @@ ORDER BY period DESC
                         "properties": {
                             "period": {"type": "string", "format": "date"},
                             "count": {"type": "integer"},
-                            "unique_licenses": {"type": "integer"}
+                            "unique_records": {"type": "integer"}
                         }
                     }
                 },
@@ -721,12 +783,25 @@ ORDER BY period DESC
         tool_name = f"geo_{entity.name}"
         description = f"Analyze {entity.name} by geographic location"
         
-        # Find coordinate fields
-        lat_field = next((col.name for col in entity.columns if 'lat' in col.name.lower() and 'dd' in col.name.lower()), 'lat_dd')
-        lon_field = next((col.name for col in entity.columns if 'lon' in col.name.lower() and 'dd' in col.name.lower()), 'lon_dd')
+        # Find coordinate fields using generic patterns
+        lat_field = None
+        lon_field = None
         
-        # Find the main geographic field (e.g., emirate)
-        main_geo = next((f for f in geo_fields if 'emirate' in f.name.lower()), geo_fields[0])
+        for col in entity.columns:
+            col_lower = col.name.lower()
+            if not lat_field and any(pattern in col_lower for pattern in ['lat', 'latitude']):
+                lat_field = col.name
+            if not lon_field and any(pattern in col_lower for pattern in ['lon', 'lng', 'longitude']):
+                lon_field = col.name
+        
+        # Fallback to common names
+        if not lat_field:
+            lat_field = 'latitude'
+        if not lon_field:
+            lon_field = 'longitude'
+        
+        # Find the main geographic field (first geographic field)
+        main_geo = geo_fields[0]
         
         parameters = [
             {
@@ -769,18 +844,21 @@ ORDER BY period DESC
             f"  AND ($boundingBox.maxLon IS NULL OR {lon_field} <= $boundingBox.maxLon)"
         ])
         
+        # Create dynamic CASE statement for geographic fields
+        geo_field_cases = []
+        for field in geo_fields:
+            geo_field_cases.append(f"    WHEN $groupByField = '{field.name}' THEN {field.name}")
+        
+        primary_key = self._get_primary_key(entity)
+        
         sql = f"""
 SELECT
   CASE 
-    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
-    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
-    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
-    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
-    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
-    ELSE emirate_name_en
+{chr(10).join(geo_field_cases)}
+    ELSE {main_geo.name}
   END as location,
   COUNT(*) as count,
-  COUNT(DISTINCT license_pk) as unique_licenses,
+  COUNT(DISTINCT {primary_key}) as unique_records,
   CASE 
     WHEN $includeCoordinates THEN AVG({lat_field})
     ELSE NULL
@@ -807,12 +885,8 @@ SELECT
   END as max_longitude
 FROM {entity.primary_model.name}_v1
 WHERE CASE 
-    WHEN $groupByField = 'emirate_name_en' THEN emirate_name_en
-    WHEN $groupByField = 'emirate_name_ar' THEN emirate_name_ar
-    WHEN $groupByField = 'issuance_authority_en' THEN issuance_authority_en
-    WHEN $groupByField = 'issuance_authority_ar' THEN issuance_authority_ar
-    WHEN $groupByField = 'bl_full_address' THEN bl_full_address
-    ELSE emirate_name_en
+{chr(10).join(geo_field_cases)}
+    ELSE {main_geo.name}
   END IS NOT NULL
 {chr(10).join(where_clauses)}
 GROUP BY location
@@ -828,6 +902,7 @@ ORDER BY count DESC
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
+                "required": [],  # No required parameters for geographic analysis
                 "return": {
                     "type": "array",
                     "items": {
@@ -835,7 +910,7 @@ ORDER BY count DESC
                         "properties": {
                             "location": {"type": "string"},
                             "count": {"type": "integer"},
-                            "unique_licenses": {"type": "integer"},
+                            "unique_records": {"type": "integer"},
                             "avg_latitude": {"type": "number"},
                             "avg_longitude": {"type": "number"},
                             "min_latitude": {"type": "number"},
@@ -922,6 +997,7 @@ ORDER BY count DESC NULLS LAST, value
                 "name": tool_name,
                 "description": description,
                 "parameters": parameters,
+                "required": [],  # No required parameters for categorical listing
                 "return": {
                     "type": "array",
                     "items": {
@@ -937,4 +1013,19 @@ ORDER BY count DESC NULLS LAST, value
                 },
                 "enabled": True
             }
-        } 
+        }
+    
+    def _get_parameter_type(self, col: ColumnInfo) -> str:
+        """Map column data type to parameter type"""
+        data_type = col.data_type.upper()
+        
+        if data_type in ['INTEGER', 'BIGINT']:
+            return 'integer'
+        elif data_type in ['DOUBLE', 'FLOAT', 'DECIMAL', 'NUMERIC']:
+            return 'number'
+        elif data_type == 'BOOLEAN':
+            return 'boolean'
+        elif data_type == 'DATE':
+            return 'string'  # Dates are passed as strings
+        else:
+            return 'string'  # Default to string for VARCHAR, TEXT, etc. 

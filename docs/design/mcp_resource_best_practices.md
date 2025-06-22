@@ -47,7 +47,6 @@ When you have expensive computations that can be cached:
 resource:
   name: active_licenses
   description: Currently active business licenses
-  refresh_schedule: "0 */6 * * *"  # Every 6 hours
 ```
 
 ### 3. **Discoverable Content Libraries**
@@ -109,7 +108,6 @@ resource:
   uri: "db://customers/active"
   description: "Customers with active subscriptions"
   mimeType: "application/json"
-  refresh_schedule: "0 0 * * *"  # Daily
 ```
 
 ### Pattern 2: Summary Statistics Resource
@@ -120,7 +118,6 @@ resource:
   uri: "analytics://licenses/by-emirate"
   description: "License counts and metrics grouped by emirate"
   mimeType: "application/json"
-  refresh_schedule: "0 */12 * * *"  # Twice daily
 ```
 
 ### Pattern 3: Reference Data Resource
@@ -131,7 +128,6 @@ resource:
   uri: "catalog://business-types"
   description: "Valid business types and their descriptions"
   mimeType: "application/json"
-  refresh_schedule: "0 0 * * 0"  # Weekly
 ```
 
 ## Resource vs Tool Decision Matrix
@@ -166,14 +162,7 @@ Always include:
 - Size estimates
 - Last updated timestamps
 
-### 3. **Refresh Strategies**
-Choose appropriate refresh schedules:
-- **Hourly**: Active record sets, live dashboards
-- **Daily**: Summary statistics, reports
-- **Weekly**: Reference data, catalogs
-- **On-demand**: Via notifications when data changes
-
-### 4. **Security Considerations**
+### 3. **Security Considerations**
 - Validate all resource URIs
 - Implement access controls
 - Sanitize file paths
@@ -219,10 +208,9 @@ tool:
 ## Common Pitfalls to Avoid
 
 1. **Creating resources for dynamic queries** - Use tools instead
-2. **Not setting refresh schedules** - Stale data reduces value
-3. **Over-granular resources** - Combine related data
-4. **Missing metadata** - Makes resources hard to discover
-5. **Ignoring security** - Resources need access controls too
+2. **Over-granular resources** - Combine related data
+3. **Missing metadata** - Makes resources hard to discover
+4. **Ignoring security** - Resources need access controls too
 
 ## Conclusion
 

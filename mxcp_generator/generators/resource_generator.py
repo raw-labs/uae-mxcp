@@ -57,32 +57,33 @@ class ResourceGenerator:
         # Find status fields that indicate active records
         status_conditions = []
         
+        # Priority 1: Status fields with enum values containing active-like terms
         for col in entity.columns:
-            if col.classification == ColumnClassification.BUSINESS_STATUS:
+            if col.classification == ColumnClassification.BUSINESS_STATUS and col.enum_values:
                 col_lower = col.name.lower()
                 
-                # Common patterns for active records
-                if any(pattern in col_lower for pattern in ['active', 'status', 'enabled']):
-                    if col.enum_values:
-                        # Look for active-like values
-                        active_values = [
-                            v for v in col.enum_values 
-                            if any(word in v.lower() for word in ['active', 'valid', 'enabled', 'current'])
-                        ]
-                        if active_values:
-                            values_str = ', '.join([f"'{v}'" for v in active_values])
-                            status_conditions.append(
-                                f"{col.name} IN ({values_str})"
-                            )
-                    elif 'bool' in col.data_type.lower():
-                        # Boolean status fields
-                        if 'is_' in col_lower or 'has_' in col_lower:
-                            status_conditions.append(f"{col.name} = true")
-            
-            # Check for expiry dates
-            elif col.classification == ColumnClassification.TEMPORAL:
-                if 'expir' in col.name.lower() or 'end' in col.name.lower() or 'exp' in col.name.lower():
-                    status_conditions.append(f"{col.name} > CURRENT_DATE")
+                # Common patterns for status fields
+                if any(pattern in col_lower for pattern in ['status', 'state', 'active', 'enabled']):
+                    active_values = self._get_active_like_values(col.enum_values)
+                    if active_values:
+                        values_str = ', '.join([f"'{v}'" for v in active_values])
+                        status_conditions.append(f"{col.name} IN ({values_str})")
+                        
+            elif col.classification == ColumnClassification.BUSINESS_STATUS:
+                col_lower = col.name.lower()
+                
+                # Boolean status fields
+                if 'bool' in col.data_type.lower():
+                    if 'is_' in col_lower or 'has_' in col_lower:
+                        status_conditions.append(f"{col.name} = true")
+        
+        # Priority 2: If no status conditions found, try expiry dates
+        if not status_conditions:
+            for col in entity.columns:
+                if col.classification == ColumnClassification.TEMPORAL:
+                    # Only use actual DATE fields, not VARCHAR
+                    if col.data_type.upper() == 'DATE' and ('expir' in col.name.lower() or 'end' in col.name.lower() or 'exp' in col.name.lower()):
+                        status_conditions.append(f"{col.name} > CURRENT_DATE")
         
         if not status_conditions:
             return None
@@ -92,7 +93,7 @@ class ResourceGenerator:
         
         sql = f"""
 SELECT *
-FROM {{{{ schema }}}}.{entity.primary_model.name}
+FROM {entity.primary_model.name}_v1
 WHERE {' AND '.join(status_conditions)}
 ORDER BY {self._get_order_column(entity)}
         """.strip()
@@ -102,13 +103,25 @@ ORDER BY {self._get_order_column(entity)}
             "resource": {
                 "name": resource_name,
                 "description": description,
+                "uri": f"data://active/{entity.name}",
                 "source": {
                     "code": sql
                 },
-                "refresh_schedule": "0 */6 * * *",  # Every 6 hours
                 "enabled": True
             }
         }
+    
+    def _get_active_like_values(self, enum_values: List[str]) -> List[str]:
+        """Find values that indicate 'active' state - domain agnostic"""
+        active_patterns = [
+            'active', 'enabled', 'current', 'valid', 'open', 'live',
+            'published', 'approved', 'confirmed', 'available', 'running'
+        ]
+        
+        return [
+            value for value in enum_values 
+            if any(pattern in value.lower() for pattern in active_patterns)
+        ]
     
     def _generate_summary_resource(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
         """Generate summary resource with pre-computed metrics"""
@@ -146,12 +159,11 @@ ORDER BY {self._get_order_column(entity)}
         
         sql = f"""
 SELECT 
-  {group_field.name},
-  COUNT(*) as record_count,
-  {',\n  '.join(metrics)}
-FROM {{{{ schema }}}}.{entity.primary_model.name}
-GROUP BY {group_field.name}
-ORDER BY COUNT(*) DESC
+  'Summary' as metric_type,
+  COUNT(*) as total_count,
+  {', '.join(metrics)}
+FROM {entity.primary_model.name}_v1
+WHERE {' AND '.join(where_clauses) if where_clauses else '1=1'}
         """.strip()
         
         return {
@@ -159,10 +171,10 @@ ORDER BY COUNT(*) DESC
             "resource": {
                 "name": resource_name,
                 "description": description,
+                "uri": f"data://summary/{entity.name}",
                 "source": {
                     "code": sql
                 },
-                "refresh_schedule": "0 0 * * *",  # Daily
                 "enabled": True
             }
         }
@@ -192,7 +204,7 @@ ORDER BY COUNT(*) DESC
     '{entity_name}' as entity_type,
     COUNT(DISTINCT {count_field}) as record_count,
     {f"MAX({date_field})::date" if date_field else "NULL"} as latest_record_date
-  FROM {{{{ schema }}}}.{entity.primary_model.name}
+  FROM {entity.primary_model.name}_v1
             """.strip()
             
             union_parts.append(query_part)
@@ -204,10 +216,10 @@ ORDER BY COUNT(*) DESC
             "resource": {
                 "name": resource_name,
                 "description": description,
+                "uri": f"data://overview/{entity.name}",
                 "source": {
                     "code": sql
                 },
-                "refresh_schedule": "0 */12 * * *",  # Every 12 hours
                 "enabled": True
             }
         }

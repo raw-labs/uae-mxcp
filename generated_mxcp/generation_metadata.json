@@ -1,0 +1,19 @@
+{
+  "version": "0.1.0",
+  "generation_timestamp": "2025-06-22T21:59:41.629756",
+  "dbt_manifest": "target/manifest.json",
+  "statistics": {
+    "entities_detected": 1,
+    "tools_generated": 5,
+    "resources_generated": 1,
+    "prompts_generated": 2,
+    "tests_generated": 10
+  },
+  "entities": {
+    "licenses": {
+      "primary_model": "dim_licenses",
+      "related_models": [],
+      "columns": 40
+    }
+  }
+}

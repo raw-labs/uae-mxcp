@@ -231,7 +231,6 @@ mxcp: "1.0.0"
 resource:
   name: business_metrics_summary
   description: "Pre-computed business metrics for fast access"
-  refresh_schedule: "0 */6 * * *"  # Every 6 hours
 ```
 
 ## 5. Prompt Generation
