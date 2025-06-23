@@ -76,6 +76,45 @@ mxcp query "SELECT \"Emirate Name En\", COUNT(*) as licenses FROM licenses GROUP
 
 ---
 
+## Claude Desktop Integration
+
+To integrate with Claude Desktop or any MCP client, add this configuration:
+
+### Claude Desktop Configuration
+Add to your Claude Desktop `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "uae": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "cd /path/to/uae-mxcp && ./start-mcp.sh --role admin"
+      ],
+      "env": {
+        "PATH": "/path/to/uae-mxcp/.env/bin:/usr/local/bin:/usr/bin",
+        "HOME": "/your/home/directory"
+      }
+    }
+  }
+}
+```
+
+**Replace the paths:**
+- `/path/to/uae-mxcp` → Your actual project directory
+- `/your/home/directory` → Your home directory path
+
+### Using with Claude Desktop
+Once configured, you can ask Claude natural language questions like:
+- "How many licenses are there in Dubai?"
+- "Show me the top 5 emirates by license count"
+- "What are the different business types?"
+
+Claude will automatically use the embedded SQL tools to query your data!
+
+---
+
 ## Project Structure
 
 ```
@@ -86,6 +125,7 @@ uae-mxcp/
 │   └── licenses.sql           # Single model reading CSV data
 ├── seeds/
 │   └── licenses_sample.csv    # 1,000 sample license records
+├── start-mcp.sh              # MCP server startup script
 └── db-prod.duckdb            # Generated DuckDB database
 ```
 
@@ -99,12 +139,14 @@ uae-mxcp/
 - ✅ **Rapid prototyping** - From CSV to queryable in minutes
 - ✅ **JSON API ready** - Structured responses for applications
 - ✅ **Real data insights** - Immediate business value
+- ✅ **LLM Integration** - Works seamlessly with Claude Desktop
 
 ### Perfect For
 - **Data exploration** - Quick analysis of CSV files
 - **Prototyping** - Test ideas before building custom tools
 - **Simple demos** - Show data value immediately
 - **Learning MXCP** - Understand core functionality
+- **AI-powered analysis** - Let Claude query your data naturally
 
 ---
 
