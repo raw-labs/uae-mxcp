@@ -1,3 +1,5 @@
+-- Base query
+WITH base_data AS (
 SELECT *
 FROM dim_licenses_v1
 WHERE 1=1
@@ -50,3 +52,13 @@ WHERE 1=1
 ORDER BY license_pk DESC
 LIMIT $limit
 OFFSET $offset
+)
+
+-- Enhanced query with conditional embedding
+SELECT 
+  bd.*,
+  CASE 
+    WHEN $embed IS NULL OR ARRAY_LENGTH($embed) = 0 THEN NULL
+    ELSE JSON_OBJECT()  -- Placeholder for embedded data
+  END as _embedded
+FROM base_data bd

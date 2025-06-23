@@ -204,3 +204,127 @@ tests:
   params:
     invalid_param: test
   expect_error: true
+- name: test_find_license_owners_basic
+  tool: find_license_owners
+  description: Basic functionality test for find_license_owners
+  params:
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+    IsPrimaryOwner: test_value
+    IsActive: test_value
+    RequiresApproval: test_value
+    CreatedAtFrom: test_value
+    CreatedAtTo: test_value
+    CreatedByFrom: test_value
+    CreatedByTo: test_value
+    embed: []
+    limit: 1
+    offset: 1
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_find_license_owners_invalid_params
+  tool: find_license_owners
+  description: Invalid parameter test for find_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_aggregate_license_owners_basic
+  tool: aggregate_license_owners
+  description: Basic functionality test for aggregate_license_owners
+  params:
+    groupByOwnerPk: true
+    groupByLicensePk: true
+    groupByOwnerGender: true
+    groupByNationality: true
+    groupByOwnerType: true
+    groupByEmail: true
+    groupByIsPrimaryOwner: true
+    groupByIsActive: true
+    groupByRequiresApproval: true
+    groupByPhoneNumber: true
+    groupByEmirates: true
+    groupByCreatedBy: true
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_aggregate_license_owners_invalid_params
+  tool: aggregate_license_owners
+  description: Invalid parameter test for aggregate_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_timeseries_license_owners_basic
+  tool: timeseries_license_owners
+  description: Basic functionality test for timeseries_license_owners
+  params:
+    timeField: owner_registration_date
+    granularity: day
+    startDate: test_value
+    endDate: test_value
+    OwnerPk: test_value
+    LicensePk: test_value
+    OwnerName: test_value
+    OwnerGender: Male
+    Nationality: UAE
+    OwnerType: Primary
+    OwnershipPercentage: test_value
+    PhoneNumber: test_value
+    Email: test_value
+    Emirates: test_value
+    OwnerRegistrationDateFrom: test_value
+    OwnerRegistrationDateTo: test_value
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_timeseries_license_owners_invalid_params
+  tool: timeseries_license_owners
+  description: Invalid parameter test for timeseries_license_owners
+  params:
+    invalid_param: test
+  expect_error: true
+- name: test_list_license_owners_categories_basic
+  tool: list_license_owners_categories
+  description: Basic functionality test for list_license_owners_categories
+  params:
+    field: owner_pk
+    includeCount: true
+  assertions:
+  - type: status
+    value: success
+  - type: has_results
+    value: true
+- name: test_list_license_owners_categories_invalid_params
+  tool: list_license_owners_categories
+  description: Invalid parameter test for list_license_owners_categories
+  params:
+    invalid_param: test
+  expect_error: true

@@ -12,6 +12,9 @@ prompt:
       **Licenses**: Dimension table for UAE business licenses, containing one record
       per license.
 
+      **License Owners**: License ownership information - contains details about individuals
+      and entities that own business licenses
+
 
       ## Available Operations
 
@@ -26,6 +29,15 @@ prompt:
 
       - `list_licenses_categories`: List distinct values for categorical fields in
       licenses
+
+      - `find_license_owners`: Search and filter license_owners records
+
+      - `aggregate_license_owners`: Aggregate license_owners data by various dimensions
+
+      - `timeseries_license_owners`: Analyze license_owners trends over time
+
+      - `list_license_owners_categories`: List distinct values for categorical fields
+      in license_owners
 
 
       ## Common Questions You Can Answer
