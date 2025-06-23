@@ -1,7 +1,7 @@
 -- Base query
 WITH base_data AS (
 SELECT *
-FROM fact_license_owners_v1
+FROM fact_license_owners
 WHERE 1=1
   AND ($OwnerPk IS NULL OR owner_pk = $OwnerPk)
   AND ($LicensePk IS NULL OR license_pk = $LicensePk)
@@ -9,7 +9,8 @@ WHERE 1=1
   AND ($OwnerGender IS NULL OR owner_gender = $OwnerGender)
   AND ($Nationality IS NULL OR nationality = $Nationality)
   AND ($OwnerType IS NULL OR owner_type = $OwnerType)
-  AND ($OwnershipPercentage IS NULL OR ownership_percentage ILIKE '%' || $OwnershipPercentage || '%')
+  AND ($OwnershipPercentageMin IS NULL OR ownership_percentage >= $OwnershipPercentageMin)
+  AND ($OwnershipPercentageMax IS NULL OR ownership_percentage <= $OwnershipPercentageMax)
   AND ($PhoneNumber IS NULL OR phone_number ILIKE '%' || $PhoneNumber || '%')
   AND ($Email IS NULL OR email = $Email)
   AND ($Emirates IS NULL OR emirates_id ILIKE '%' || $Emirates || '%')

@@ -7,5 +7,5 @@ resource:
     code: "SELECT \n  'Summary' as metric_type,\n  COUNT(*) as total_count,\n  SUM(ownership_percentage)\
       \ as total_ownership_percentage, AVG(ownership_percentage) as avg_ownership_percentage,\
       \ COUNT(DISTINCT CASE WHEN ownership_percentage > 0 THEN phone_number END) as\
-      \ count_with_ownership_percentage\nFROM fact_license_owners_v1\nWHERE 1=1"
+      \ count_with_ownership_percentage\nFROM fact_license_owners\nWHERE 1=1"
   enabled: true

@@ -63,6 +63,7 @@ class RelationshipInfo:
 class DbtModel:
     """Simplified representation of a dbt model"""
     name: str
+    table_name: str  # Actual table name/alias in database
     schema: str
     description: Optional[str]
     columns: Dict[str, Dict]
@@ -233,6 +234,7 @@ class SemanticAnalyzer:
                     
                     model = DbtModel(
                         name=model_name,
+                        table_name=node.get('alias', model_name),  # Use alias if available, fallback to model name
                         schema=node.get('schema', 'public'),
                         description=node.get('description'),
                         columns=columns,

@@ -37,9 +37,6 @@ tool:
   - name: LicensePk
     type: string
     description: Filter by license_pk
-  - name: OwnerName
-    type: string
-    description: Filter by owner_name
   - name: OwnerGender
     type: string
     description: Filter by owner_gender
@@ -65,18 +62,21 @@ tool:
     - Partner
     - Shareholder
     - null
-  - name: OwnershipPercentage
-    type: string
-    description: Filter by ownership_percentage
-  - name: PhoneNumber
-    type: string
-    description: Filter by phone_number
   - name: Email
     type: string
     description: Filter by email
-  - name: Emirates
+  - name: IsPrimaryOwner
+    type: boolean
+    description: Filter by is_primary_owner
+  - name: IsActive
+    type: boolean
+    description: Filter by is_active
+  - name: RequiresApproval
+    type: boolean
+    description: Filter by requires_approval
+  - name: OwnerPk
     type: string
-    description: Filter by emirates_id
+    description: Filter by owner_pk
   - name: OwnerRegistrationDateFrom
     type: string
     format: date
@@ -85,6 +85,14 @@ tool:
     type: string
     format: date
     description: Filter owner_registration_date to date (YYYY-MM-DD)
+  - name: CreatedAtFrom
+    type: string
+    format: date
+    description: Filter created_at from date (YYYY-MM-DD)
+  - name: CreatedAtTo
+    type: string
+    format: date
+    description: Filter created_at to date (YYYY-MM-DD)
   required: []
   return:
     type: array

@@ -43,9 +43,13 @@ tool:
     - Shareholder
     - null
     default: null
-  - name: OwnershipPercentage
-    type: string
-    description: Filter by ownership_percentage
+  - name: OwnershipPercentageMin
+    type: number
+    description: Minimum value for ownership_percentage
+    default: null
+  - name: OwnershipPercentageMax
+    type: number
+    description: Maximum value for ownership_percentage
     default: null
   - name: PhoneNumber
     type: string

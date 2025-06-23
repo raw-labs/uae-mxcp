@@ -3,150 +3,53 @@ tool:
   name: aggregate_licenses
   description: Aggregate licenses data by various dimensions
   parameters:
-  - name: groupByLicensePk
-    type: boolean
-    description: Group by LicensePk
-    default: false
-  - name: groupByBl
-    type: boolean
-    description: Group by Bl
-    default: false
-  - name: groupByBlCbls
-    type: boolean
-    description: Group by BlCbls
-    default: false
-  - name: groupByEmirateNameEn
-    type: boolean
-    description: Group by EmirateNameEn
-    default: false
-  - name: groupByEmirateNameAr
-    type: boolean
-    description: Group by EmirateNameAr
-    default: false
-  - name: groupByIssuanceAuthorityEn
-    type: boolean
-    description: Group by IssuanceAuthorityEn
-    default: false
-  - name: groupByIssuanceAuthorityAr
-    type: boolean
-    description: Group by IssuanceAuthorityAr
-    default: false
-  - name: groupByIssuanceAuthorityBranchEn
-    type: boolean
-    description: Group by IssuanceAuthorityBranchEn
-    default: false
-  - name: groupByIssuanceAuthorityBranchAr
-    type: boolean
-    description: Group by IssuanceAuthorityBranchAr
-    default: false
-  - name: groupByBlStatusEn
-    type: boolean
-    description: Group by BlStatusEn
-    default: false
-  - name: groupByBlStatusAr
-    type: boolean
-    description: Group by BlStatusAr
-    default: false
-  - name: groupByBlNameEn
-    type: boolean
-    description: Group by BlNameEn
-    default: false
-  - name: groupByBlNameAr
-    type: boolean
-    description: Group by BlNameAr
-    default: false
-  - name: groupByBlLegalTypeEn
-    type: boolean
-    description: Group by BlLegalTypeEn
-    default: false
-  - name: groupByBlLegalTypeAr
-    type: boolean
-    description: Group by BlLegalTypeAr
-    default: false
-  - name: groupByBlTypeEn
-    type: boolean
-    description: Group by BlTypeEn
-    default: false
-  - name: groupByBlTypeAr
-    type: boolean
-    description: Group by BlTypeAr
-    default: false
-  - name: groupByLicenseBranchFlag
-    type: boolean
-    description: Group by LicenseBranchFlag
-    default: false
-  - name: groupByParentLicenseIssuanceAuthorityEn
-    type: boolean
-    description: Group by ParentLicenseIssuanceAuthorityEn
-    default: false
-  - name: groupByParentLicenseIssuanceAuthorityAr
-    type: boolean
-    description: Group by ParentLicenseIssuanceAuthorityAr
-    default: false
-  - name: groupByRelationshipTypeEn
-    type: boolean
-    description: Group by RelationshipTypeEn
-    default: false
-  - name: groupByRelationshipTypeAr
-    type: boolean
-    description: Group by RelationshipTypeAr
-    default: false
-  - name: groupByOwnerNationalityAr
-    type: boolean
-    description: Group by OwnerNationalityAr
-    default: false
-  - name: groupByOwnerGender
-    type: boolean
-    description: Group by OwnerGender
-    default: false
-  - name: groupByOwnerNationalityEn
-    type: boolean
-    description: Group by OwnerNationalityEn
-    default: false
-  - name: groupByBusinessActivityDescEn
-    type: boolean
-    description: Group by BusinessActivityDescEn
-    default: false
-  - name: groupByBusinessActivityDescAr
-    type: boolean
-    description: Group by BusinessActivityDescAr
-    default: false
-  - name: groupByLicenseLatitude
-    type: boolean
-    description: Group by LicenseLatitude
-    default: false
-  - name: groupByLicenseLongitude
-    type: boolean
-    description: Group by LicenseLongitude
-    default: false
-  - name: groupByLicenseLatitude1
-    type: boolean
-    description: Group by LicenseLatitude1
-    default: false
-  - name: groupByLicenseLongitude1
-    type: boolean
-    description: Group by LicenseLongitude1
-    default: false
-  - name: groupByBlEstDate
-    type: boolean
-    description: Group by BlEstDate
-    default: false
-  - name: groupByBlExpDate
-    type: boolean
-    description: Group by BlExpDate
-    default: false
-  - name: groupByBlFullAddress
-    type: boolean
-    description: Group by BlFullAddress
-    default: false
-  - name: groupByParentLicenceLicenseNumber
-    type: boolean
-    description: Group by ParentLicenceLicenseNumber
-    default: false
-  - name: groupByBusinessActivityCode
-    type: boolean
-    description: Group by BusinessActivityCode
-    default: false
+  - name: group_by
+    type: array
+    items:
+      type: string
+      enum:
+      - LicensePk
+      - Bl
+      - BlCbls
+      - EmirateNameEn
+      - EmirateNameAr
+      - IssuanceAuthorityEn
+      - IssuanceAuthorityAr
+      - IssuanceAuthorityBranchEn
+      - IssuanceAuthorityBranchAr
+      - BlStatusEn
+      - BlStatusAr
+      - BlNameEn
+      - BlNameAr
+      - BlLegalTypeEn
+      - BlLegalTypeAr
+      - BlTypeEn
+      - BlTypeAr
+      - LicenseBranchFlag
+      - ParentLicenseIssuanceAuthorityEn
+      - ParentLicenseIssuanceAuthorityAr
+      - RelationshipTypeEn
+      - RelationshipTypeAr
+      - OwnerNationalityAr
+      - OwnerGender
+      - OwnerNationalityEn
+      - BusinessActivityDescEn
+      - BusinessActivityDescAr
+      - LicenseLatitude
+      - LicenseLongitude
+      - LicenseLatitude1
+      - LicenseLongitude1
+      - LicensePk
+      - EmirateNameEn
+      - EmirateNameAr
+      - BlNameEn
+      - BlNameAr
+      - ParentLicenceLicenseNumber
+      - BusinessActivityCode
+      - BlEstDate
+      - BlExpDate
+      - BlFullAddress
+    description: Fields to group by (can select multiple)
   - name: LicensePk
     type: string
     description: Filter by license_pk
@@ -203,6 +106,37 @@ tool:
     - Under Commercial Liquida
     - Under Commercial Mortgage
     - null
+  - name: BlStatusAr
+    type: string
+    description: Filter by bl_status_ar
+  - name: BlNameEn
+    type: string
+    description: Filter by bl_name_en
+  - name: BlNameAr
+    type: string
+    description: Filter by bl_name_ar
+  - name: BlLegalTypeEn
+    type: string
+    description: Filter by bl_legal_type_en
+  - name: BlLegalTypeAr
+    type: string
+    description: Filter by bl_legal_type_ar
+  - name: BlEstDateFrom
+    type: string
+    format: date
+    description: Filter bl_est_date_d from date (YYYY-MM-DD)
+  - name: BlEstDateTo
+    type: string
+    format: date
+    description: Filter bl_est_date_d to date (YYYY-MM-DD)
+  - name: BlExpDateFrom
+    type: string
+    format: date
+    description: Filter bl_exp_date_d from date (YYYY-MM-DD)
+  - name: BlExpDateTo
+    type: string
+    format: date
+    description: Filter bl_exp_date_d to date (YYYY-MM-DD)
   - name: BlEstDateDFrom
     type: string
     format: date
@@ -229,10 +163,12 @@ tool:
   enabled: true
   tests:
   - name: test_manual_aggregation
-    description: Manual aggregation test that should be preserved
+    description: Manual aggregation test that should be preserved (updated for new
+      parameter format)
     arguments:
-    - key: groupByEmirateNameEn
-      value: true
+    - key: group_by
+      value:
+      - EmirateNameEn
     - key: EmirateNameEn
       value: Dubai
     result: data_returned

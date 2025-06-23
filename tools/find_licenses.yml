@@ -305,6 +305,14 @@ tool:
     type: number
     description: Maximum value for lon_dd
     default: null
+  - name: embed
+    type: array
+    items:
+      type: string
+      enum:
+      - license_owners
+    description: Related entities to embed in results (lazy loading)
+    default: []
   - name: limit
     type: integer
     description: Maximum number of records to return

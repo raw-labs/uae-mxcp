@@ -88,6 +88,22 @@ tool:
     - Under Commercial Liquida
     - Under Commercial Mortgage
     - null
+  - name: BlEstDateFrom
+    type: string
+    format: date
+    description: Filter bl_est_date_d from date (YYYY-MM-DD)
+  - name: BlEstDateTo
+    type: string
+    format: date
+    description: Filter bl_est_date_d to date (YYYY-MM-DD)
+  - name: BlExpDateFrom
+    type: string
+    format: date
+    description: Filter bl_exp_date_d from date (YYYY-MM-DD)
+  - name: BlExpDateTo
+    type: string
+    format: date
+    description: Filter bl_exp_date_d to date (YYYY-MM-DD)
   - name: BlEstDateDFrom
     type: string
     format: date

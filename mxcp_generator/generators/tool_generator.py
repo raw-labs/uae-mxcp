@@ -104,7 +104,7 @@ class ToolGenerator:
                     f"  AND (${param_name}To IS NULL OR {date_field} <= ${param_name}To::DATE)"
                 ])
             
-            elif col.data_type.lower() in ['integer', 'bigint', 'numeric', 'decimal', 'float', 'double']:
+            elif any(numeric_type in col.data_type.lower() for numeric_type in ['integer', 'bigint', 'numeric', 'decimal', 'float', 'double']):
                 # Add min/max for numeric fields
                 parameters.extend([
                     {
@@ -181,7 +181,7 @@ class ToolGenerator:
         # Build SQL with conditional embedding
         base_sql = f"""
 SELECT *
-FROM {entity.primary_model.name}_v1
+FROM {entity.primary_model.table_name}
 WHERE 1=1
 {chr(10).join(where_conditions)}
 ORDER BY {self._get_default_order_column(entity)} DESC
@@ -284,7 +284,7 @@ OFFSET $offset
 SELECT
   COUNT(*) as record_count,
 {','.join(metric_aggregations)}
-FROM {entity.primary_model.name}_v1
+FROM {entity.primary_model.table_name}
         """.strip()
         
         return {
@@ -322,8 +322,8 @@ FROM {entity.primary_model.name}_v1
 SELECT 
   a.*,
   b.* EXCLUDE ({', '.join([col for _, col in rel_info.join_keys])})
-FROM {entity.primary_model.name}_v1 a
-LEFT JOIN dim_{rel_info.to_entity}_v1 b
+FROM {entity.primary_model.table_name} a
+LEFT JOIN dim_{rel_info.to_entity} b
   ON {' AND '.join(join_conditions)}
 WHERE 1=1
   AND ($id IS NULL OR a.{self._get_primary_key(entity)} = $id)
@@ -439,8 +439,25 @@ LIMIT 100
         """Generate common filter parameters for tools"""
         parameters = []
         
-        # Add parameters for all columns (up to limit), making them all optional
-        for col in entity.columns[:limit]:
+        # Add parameters for categorical/business status fields
+        categorical_fields = [
+            col for col in entity.columns
+            if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
+        ]
+        
+        # Include important identifier/name fields 
+        identifier_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.IDENTIFIER
+            or 'name' in col.name.lower()  # Include name fields regardless of classification
+            or 'id' in col.name.lower()
+            or col.name.lower().endswith('_pk')
+        ]
+        
+        # Combine and limit
+        important_fields = (categorical_fields + identifier_fields)[:limit]
+        
+        for col in important_fields:
             param_name = self._to_business_name(col.name)
             
             param_def = {
@@ -453,43 +470,50 @@ LIMIT 100
             if col.enum_values:
                 param_def["enum"] = col.enum_values + [None]
             
-            # Add format for date strings
-            if col.data_type.lower() in ['varchar', 'text'] and 'date' in col.name.lower():
-                param_def["format"] = "date"
-                
             parameters.append(param_def)
         
-        # Add range parameters for numeric/date fields
-        for col in entity.columns:
-            if col.classification in [ColumnClassification.TEMPORAL, ColumnClassification.METRIC]:
+        # Add range parameters for temporal fields
+        temporal_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.TEMPORAL
+        ]
+        
+        for col in temporal_fields:
+            if col.data_type.lower() in ['date', 'timestamp', 'datetime', 'timestamptz', 'timestamp with time zone']:
                 param_name = self._to_business_name(col.name)
-                
-                if col.data_type.upper() == 'DATE':
+                parameters.extend([
+                    {
+                        "name": f"{param_name}From",
+                        "type": "string",
+                        "format": "date",
+                        "description": f"Filter {col.name} from date (YYYY-MM-DD)"
+                    },
+                    {
+                        "name": f"{param_name}To", 
+                        "type": "string",
+                        "format": "date",
+                        "description": f"Filter {col.name} to date (YYYY-MM-DD)"
+                    }
+                ])
+            else:
+                # Check for _d version (date version of string date field)
+                date_version = f"{col.name}_d"
+                date_col = next((c for c in entity.columns if c.name == date_version), None)
+                if date_col and date_col.data_type.lower() in ['date', 'timestamp', 'datetime']:
+                    # Use original field name (without _d) for parameter name
+                    param_name = self._to_business_name(col.name)  # Use original name, not _d version
                     parameters.extend([
                         {
                             "name": f"{param_name}From",
                             "type": "string",
                             "format": "date",
-                            "description": f"Filter {col.name} from date (YYYY-MM-DD)"
+                            "description": f"Filter {date_col.name} from date (YYYY-MM-DD)"
                         },
                         {
                             "name": f"{param_name}To", 
                             "type": "string",
                             "format": "date",
-                            "description": f"Filter {col.name} to date (YYYY-MM-DD)"
-                        }
-                    ])
-                elif col.data_type.upper() in ['INTEGER', 'BIGINT', 'DOUBLE', 'FLOAT', 'DECIMAL']:
-                    parameters.extend([
-                        {
-                            "name": f"{param_name}Min",
-                            "type": "number",
-                            "description": f"Minimum value for {col.name}"
-                        },
-                        {
-                            "name": f"{param_name}Max",
-                            "type": "number", 
-                            "description": f"Maximum value for {col.name}"
+                            "description": f"Filter {date_col.name} to date (YYYY-MM-DD)"
                         }
                     ])
         
@@ -499,47 +523,53 @@ LIMIT 100
         """Generate WHERE clauses for common filters"""
         where_clauses = []
         
-        # Add filters for categorical fields using same naming as search tool
+        # Add filters for categorical fields using same naming as parameters
         categorical_fields = [
             col for col in entity.columns
             if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
         ]
         
-        for field in categorical_fields[:limit]:
-            param_name = self._to_business_name(field.name)  # Same as search tool
+        # Include important identifier/name fields 
+        identifier_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.IDENTIFIER
+            or 'name' in col.name.lower()  # Include name fields regardless of classification
+            or 'id' in col.name.lower()
+            or col.name.lower().endswith('_pk')
+        ]
+        
+        # Combine and limit to match parameter generation
+        important_fields = (categorical_fields + identifier_fields)[:limit]
+        
+        for field in important_fields:
+            param_name = self._to_business_name(field.name)  # Same as parameter generation
             where_clauses.append(
                 f"  AND (${param_name} IS NULL OR {field.name} = ${param_name})"
             )
         
-        # Add date range filters using same naming as search tool
+        # Add date range filters using same naming as parameters
         temporal_fields = [
             col for col in entity.columns
             if col.classification == ColumnClassification.TEMPORAL
         ]
         
-        for field in temporal_fields[:2]:
-            # Use the actual field name for parameter generation (including _d suffix if present)
-            if field.data_type.lower() == 'date':
+        for field in temporal_fields:
+            if field.data_type.lower() in ['date', 'timestamp', 'datetime', 'timestamptz', 'timestamp with time zone']:
                 param_base = self._to_business_name(field.name)
                 where_clauses.extend([
                     f"  AND (${param_base}From IS NULL OR {field.name} >= ${param_base}From::DATE)",
                     f"  AND (${param_base}To IS NULL OR {field.name} <= ${param_base}To::DATE)"
                 ])
             else:
-                # For string date fields, check if _d version exists and use it
-                date_field = f"{field.name}_d"
-                if any(col.name == date_field for col in entity.columns):
-                    param_base = self._to_business_name(date_field)  # Use _d version for param name
+                # Check for _d version (date version of string date field)
+                date_version = f"{field.name}_d"
+                date_col = next((c for c in entity.columns if c.name == date_version), None)
+                if date_col and date_col.data_type.lower() in ['date', 'timestamp', 'datetime']:
+                    # Use original field name (without _d) for parameter name
+                    param_base = self._to_business_name(field.name)  # Use original name for parameter
                     where_clauses.extend([
-                        f"  AND (${param_base}From IS NULL OR {date_field} >= ${param_base}From::DATE)",
-                        f"  AND (${param_base}To IS NULL OR {date_field} <= ${param_base}To::DATE)"
-                    ])
-                else:
-                    # Fallback to original field
-                    param_base = self._to_business_name(field.name)
-                    where_clauses.extend([
-                        f"  AND (${param_base}From IS NULL OR {field.name} >= ${param_base}From::DATE)",
-                        f"  AND (${param_base}To IS NULL OR {field.name} <= ${param_base}To::DATE)"
+                        f"  AND (${param_base}From IS NULL OR {date_col.name} >= ${param_base}From::DATE)",
+                        f"  AND (${param_base}To IS NULL OR {date_col.name} <= ${param_base}To::DATE)"
                     ])
         
         return where_clauses
@@ -575,11 +605,20 @@ LIMIT 100
             return "string"
     
     def _generate_aggregation_tool(self, entity: BusinessEntity) -> Optional[Dict[str, Any]]:
-        """Generate aggregation tool for complex queries"""
-        # Find aggregatable fields - include both CATEGORICAL and BUSINESS_STATUS
+        """Generate optimized aggregation tool with performance safeguards"""
+        # Find aggregatable fields - include categorical, business status, and important identifiers
         categorical_fields = [
             col for col in entity.columns
             if col.classification in [ColumnClassification.CATEGORICAL, ColumnClassification.BUSINESS_STATUS]
+        ]
+        
+        # Include important identifier/name fields that should be available for filtering
+        identifier_fields = [
+            col for col in entity.columns
+            if col.classification == ColumnClassification.IDENTIFIER
+            or 'name' in col.name.lower()  # Include name fields regardless of classification
+            or 'id' in col.name.lower()
+            or col.name.lower().endswith('_pk')
         ]
         
         # Also include other string fields that could be used for grouping
@@ -588,14 +627,10 @@ LIMIT 100
             if col.data_type.lower() in ['varchar', 'string', 'text', 'char'] 
             and col.classification not in [ColumnClassification.DESCRIPTIVE]
             and col not in categorical_fields
+            and col not in identifier_fields
         ]
         
-        all_groupable_fields = categorical_fields + string_fields
-        
-        metric_fields = [
-            col for col in entity.columns
-            if col.classification == ColumnClassification.METRIC
-        ]
+        all_groupable_fields = categorical_fields + identifier_fields + string_fields
         
         if not all_groupable_fields:
             return None
@@ -605,38 +640,78 @@ LIMIT 100
         
         parameters = []
         
-        # Add group by parameters for ALL categorical/string fields
-        for field in all_groupable_fields:
-            param_name = f"groupBy{self._to_business_name(field.name)}"
-            parameters.append({
-                "name": param_name,
-                "type": "boolean",
-                "description": f"Group by {self._to_business_name(field.name)}",
-                "default": False
-            })
+        # Use ARRAY parameter instead of individual boolean parameters
+        group_by_options = [self._to_business_name(field.name) for field in all_groupable_fields]
+        parameters.append({
+            "name": "group_by",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": group_by_options
+            },
+            "description": "Fields to group by (can select multiple)"
+        })
         
         # Add common filters using same method as search tool
-        parameters.extend(self._generate_common_filter_parameters(entity, limit=10))
+        filter_parameters = self._generate_common_filter_parameters(entity, limit=15)
+        parameters.extend(filter_parameters)
         
-        # Build dynamic SQL
-        select_columns = ["COUNT(*) as total_count", f"COUNT(DISTINCT {self._get_primary_key(entity)}) as unique_records"]
+        # Get common where clauses using the SAME field selection logic as parameters
+        where_clauses = self._generate_common_where_clauses(entity, limit=15)
         
-        # Add dynamic group by columns based on parameters
-        for i, field in enumerate(all_groupable_fields):
-            param_name = f"groupBy{self._to_business_name(field.name)}"
-            select_columns.insert(i, f"CASE WHEN ${param_name} THEN {field.name} ELSE 'All' END as {field.name}")
+        # Build optimized SQL with performance safeguards
+        primary_key = self._get_primary_key(entity)
         
-        # Get common where clauses
-        where_clauses = self._generate_common_where_clauses(entity)
+        # Create dynamic CASE statements for each field
+        select_cases = []
+        group_cases = []
         
-        # Build the final SQL
+        for field in all_groupable_fields:
+            business_name = self._to_business_name(field.name)
+            case_stmt = f"CASE WHEN '{business_name}' = ANY($group_by) THEN {field.name} ELSE 'All' END"
+            select_cases.append(f"{case_stmt} as {field.name}")
+            group_cases.append(case_stmt)
+        
+        # Build the optimized SQL with performance safeguards
         sql = f"""
-SELECT
-  {',\n  '.join(select_columns)}
-FROM {entity.primary_model.name}_v1
-WHERE 1=1
+-- Optimized aggregate query with performance safeguards
+WITH base_data AS (
+  SELECT *
+  FROM {entity.primary_model.table_name}
+  WHERE 1=1
 {chr(10).join(where_clauses)}
-GROUP BY {', '.join([f"{i+1}" for i in range(len(all_groupable_fields))])}
+  -- Performance safeguard: limit large scans
+  LIMIT CASE 
+    WHEN {self._generate_filter_check_condition(entity)} 
+    THEN 1000000  -- Allow larger scans when filtered
+    ELSE 50000    -- Limit unfiltered scans to 50K records
+  END
+)
+SELECT
+  -- Dynamic grouping based on group_by array
+  {',\n  '.join(select_cases)},
+  
+  -- Aggregation metrics
+  COUNT(*) as total_count,
+  COUNT(DISTINCT {primary_key}) as unique_records,
+  
+  -- Metadata with performance info
+  JSON_OBJECT(
+    'grouped_by', $group_by,
+    'filter_applied', JSON_OBJECT(
+{self._generate_filter_metadata(entity)}
+    ),
+    'performance_note', CASE 
+      WHEN {self._generate_unfiltered_check_condition(entity)}
+      THEN 'Limited to 50K records for performance. Add filters for complete results.'
+      ELSE 'Full dataset scan performed.'
+    END
+  ) as _metadata
+
+FROM base_data
+GROUP BY 
+  {',\n  '.join(group_cases)}
+
 ORDER BY total_count DESC
 LIMIT 100
         """.strip()
@@ -720,21 +795,39 @@ LIMIT 100
         # Create dynamic CASE statement for all temporal fields
         temporal_field_cases = []
         for field in temporal_fields:
-            # Use the proper date field (prefer _d version if available)
-            actual_field = field.name
-            if field.data_type.lower() != 'date':
-                # Check if there's a _d version
+            # Only include fields that are actually dates/timestamps
+            if field.data_type.lower() in ['date', 'timestamp', 'datetime', 'timestamptz', 'timestamp with time zone']:
+                actual_field = field.name
+                temporal_field_cases.append(f"    WHEN $timeField = '{field.name}' THEN {actual_field}::TIMESTAMP")
+            elif field.data_type.lower() != 'date':
+                # Check if there's a _d version that is a proper date
                 date_version = f"{field.name}_d"
-                if any(col.name == date_version for col in entity.columns):
-                    actual_field = date_version
-            temporal_field_cases.append(f"    WHEN $timeField = '{field.name}' THEN {actual_field}")
+                date_col = next((col for col in entity.columns if col.name == date_version), None)
+                if date_col and date_col.data_type.lower() in ['date', 'timestamp', 'datetime']:
+                    temporal_field_cases.append(f"    WHEN $timeField = '{field.name}' THEN {date_version}::TIMESTAMP")
         
-        # Fallback to first temporal field
-        default_field = temporal_fields[0].name
-        if temporal_fields[0].data_type.lower() != 'date':
-            date_version = f"{temporal_fields[0].name}_d"
-            if any(col.name == date_version for col in entity.columns):
-                default_field = date_version
+        # Skip if no valid temporal fields found
+        if not temporal_field_cases:
+            return None
+        
+        # Use first valid temporal field as fallback
+        default_field = None
+        for field in temporal_fields:
+            if field.data_type.lower() in ['date', 'timestamp', 'datetime', 'timestamptz', 'timestamp with time zone']:
+                default_field = f"{field.name}::TIMESTAMP"
+                break
+        
+        if not default_field:
+            # Try _d versions
+            for field in temporal_fields:
+                date_version = f"{field.name}_d"
+                date_col = next((col for col in entity.columns if col.name == date_version), None)
+                if date_col and date_col.data_type.lower() in ['date', 'timestamp', 'datetime']:
+                    default_field = f"{date_version}::TIMESTAMP"
+                    break
+        
+        if not default_field:
+            return None  # No valid temporal fields
         
         sql = f"""
 SELECT
@@ -746,7 +839,7 @@ SELECT
   ) as period,
   COUNT(*) as count,
   COUNT(DISTINCT {primary_key}) as unique_records
-FROM {entity.primary_model.name}_v1
+FROM {entity.primary_model.table_name}
 WHERE CASE 
 {chr(10).join(temporal_field_cases)}
       ELSE {default_field}
@@ -907,7 +1000,7 @@ SELECT
     WHEN $includeCoordinates THEN MAX({lon_field})
     ELSE NULL
   END as max_longitude
-FROM {entity.primary_model.name}_v1
+FROM {entity.primary_model.table_name}
 WHERE CASE 
 {chr(10).join(geo_field_cases)}
     ELSE {main_geo.name}
@@ -998,15 +1091,15 @@ ORDER BY count DESC
         sql = f"""
 SELECT DISTINCT
   CASE 
-{chr(10).join([f"    WHEN $field = '{col.name}' THEN {col.name}" for col in categorical_fields])}
+{chr(10).join([f"    WHEN $field = '{col.name}' THEN CAST({col.name} AS VARCHAR)" for col in categorical_fields])}
   END as value,
   CASE 
     WHEN $includeCount THEN COUNT(*)
     ELSE NULL
   END as count
-FROM {entity.primary_model.name}_v1
+FROM {entity.primary_model.table_name}
 WHERE CASE 
-{chr(10).join([f"    WHEN $field = '{col.name}' THEN {col.name}" for col in categorical_fields])}
+{chr(10).join([f"    WHEN $field = '{col.name}' THEN CAST({col.name} AS VARCHAR)" for col in categorical_fields])}
   END IS NOT NULL
 GROUP BY value
 ORDER BY count DESC NULLS LAST, value
@@ -1069,8 +1162,12 @@ ORDER BY count DESC NULLS LAST, value
                         entity_name = target_model[4:]  # Remove 'dim_' prefix
                         embed_options.append(entity_name)
         
-        # Also check if there are related models that reference this entity
-        # This would require analyzing all entities, but for now we'll use the direct relationships
+        # For now, add hardcoded relationships based on known schema
+        # This should be replaced with proper relationship detection
+        if entity.name == 'licenses':
+            embed_options.append('license_owners')
+        elif entity.name == 'license_owners':
+            embed_options.append('licenses')
         
         return list(set(embed_options))  # Remove duplicates
     
@@ -1098,25 +1195,87 @@ FROM base_data bd
         return embedding_template
     
     def _detect_relationships_from_columns(self, entity: BusinessEntity) -> Dict[str, Any]:
-        """Detect relationships from column metadata"""
+        """Detect relationships from column names and foreign keys"""
         relationships = {}
         
         for col in entity.columns:
-            # Check if column has relationship metadata from dbt tests
-            if hasattr(col, 'relationships') and col.relationships:
-                for rel_info in col.relationships:
-                    target_model = rel_info.get('target_model', '')
-                    target_field = rel_info.get('target_field', '')
-                    
-                    if target_model and target_field:
-                        # Determine relationship type (for now assume many-to-one)
-                        rel_type = "many-to-one"
-                        
-                        relationships[target_model] = {
-                            'type': rel_type,
-                            'source_field': col.name,
-                            'target_field': target_field,
-                            'target_model': target_model
-                        }
+            col_lower = col.name.lower()
+            
+            # Look for foreign key patterns
+            if col_lower.endswith('_pk') or col_lower.endswith('_id') or col_lower.endswith('_key'):
+                # Extract potential entity name
+                entity_part = col_lower.replace('_pk', '').replace('_id', '').replace('_key', '')
+                
+                # Skip self-references
+                if entity_part != entity.name.lower():
+                    relationships[col.name] = {
+                        'target_entity': entity_part,
+                        'relationship_type': 'many_to_one'
+                    }
         
-        return relationships 
+        return relationships
+    
+    def _generate_filter_check_condition(self, entity: BusinessEntity) -> str:
+        """Generate condition to check if any filters are applied"""
+        filter_conditions = []
+        
+        # Check common filter parameters
+        for col in entity.columns[:10]:  # Limit to first 10 columns
+            param_name = f"${self._to_business_name(col.name)}"
+            filter_conditions.append(f"{param_name} IS NOT NULL")
+        
+        # Add date range checks
+        for col in entity.columns:
+            if col.classification == ColumnClassification.TEMPORAL:
+                param_name = self._to_business_name(col.name)
+                filter_conditions.extend([
+                    f"${param_name}From IS NOT NULL",
+                    f"${param_name}To IS NOT NULL"
+                ])
+        
+        if not filter_conditions:
+            return "FALSE"
+        
+        return " OR ".join(filter_conditions[:5])  # Limit to 5 conditions for readability
+    
+    def _generate_unfiltered_check_condition(self, entity: BusinessEntity) -> str:
+        """Generate condition to check if query is completely unfiltered"""
+        filter_conditions = []
+        
+        # Check main filter parameters (opposite of filter_check_condition)
+        for col in entity.columns[:5]:  # Check first 5 key columns
+            param_name = f"${self._to_business_name(col.name)}"
+            filter_conditions.append(f"{param_name} IS NULL")
+        
+        if not filter_conditions:
+            return "TRUE"
+        
+        return " AND ".join(filter_conditions)
+    
+    def _generate_filter_metadata(self, entity: BusinessEntity) -> str:
+        """Generate metadata about applied filters"""
+        metadata_fields = []
+        
+        # Add key filter fields to metadata
+        key_fields = [col for col in entity.columns[:5] if col.classification in [
+            ColumnClassification.CATEGORICAL, 
+            ColumnClassification.BUSINESS_STATUS,
+            ColumnClassification.GEOGRAPHIC
+        ]]
+        
+        for field in key_fields[:3]:  # Limit to 3 key fields
+            param_name = self._to_business_name(field.name)
+            metadata_fields.append(f"      '{field.name.lower()}', ${param_name}")
+        
+        # Add date range if temporal fields exist
+        temporal_fields = [col for col in entity.columns if col.classification == ColumnClassification.TEMPORAL]
+        if temporal_fields:
+            field = temporal_fields[0]
+            param_name = self._to_business_name(field.name)
+            metadata_fields.append(f"""      'date_range', CASE 
+        WHEN ${param_name}From IS NOT NULL OR ${param_name}To IS NOT NULL 
+        THEN JSON_OBJECT('from', ${param_name}From, 'to', ${param_name}To)
+        ELSE NULL 
+      END""")
+        
+        return ',\n'.join(metadata_fields) if metadata_fields else "      'no_filters', TRUE" 

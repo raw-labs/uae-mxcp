@@ -8,5 +8,5 @@ resource:
       \ as record_count,\n    NULL as latest_record_date\n  FROM dim_licenses_v1\n\
       UNION ALL\nSELECT \n    'license_owners' as entity_type,\n    COUNT(DISTINCT\
       \ phone_number) as record_count,\n    MAX(created_at)::date as latest_record_date\n\
-      \  FROM fact_license_owners_v1\nORDER BY record_count DESC"
+      \  FROM fact_license_owners\nORDER BY record_count DESC"
   enabled: true

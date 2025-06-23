@@ -6,7 +6,7 @@ resource:
   source:
     code: 'SELECT *
 
-      FROM fact_license_owners_v1
+      FROM fact_license_owners
 
       WHERE is_primary_owner = true AND is_active = true
 

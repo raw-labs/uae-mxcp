@@ -1,38 +1,38 @@
 SELECT
   DATE_TRUNC($granularity, 
     CASE 
-    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d
-    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d::TIMESTAMP
+      ELSE bl_est_date_d::TIMESTAMP
     END
   ) as period,
   COUNT(*) as count,
   COUNT(DISTINCT license_pk) as unique_records
 FROM dim_licenses_v1
 WHERE CASE 
-    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d
-    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d::TIMESTAMP
+      ELSE bl_est_date_d::TIMESTAMP
   END IS NOT NULL
   AND ($startDate IS NULL OR 
     CASE 
-    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d
-    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d::TIMESTAMP
+      ELSE bl_est_date_d::TIMESTAMP
     END >= $startDate::DATE)
   AND ($endDate IS NULL OR 
     CASE 
-    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d
-    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d
-    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d
-      ELSE bl_est_date_d
+    WHEN $timeField = 'bl_est_date' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date' THEN bl_exp_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_est_date_d' THEN bl_est_date_d::TIMESTAMP
+    WHEN $timeField = 'bl_exp_date_d' THEN bl_exp_date_d::TIMESTAMP
+      ELSE bl_est_date_d::TIMESTAMP
     END <= $endDate::DATE)
   AND ($LicensePk IS NULL OR license_pk = $LicensePk)
   AND ($Bl IS NULL OR bl = $Bl)
@@ -44,6 +44,10 @@ WHERE CASE
   AND ($IssuanceAuthorityBranchEn IS NULL OR issuance_authority_branch_en = $IssuanceAuthorityBranchEn)
   AND ($IssuanceAuthorityBranchAr IS NULL OR issuance_authority_branch_ar = $IssuanceAuthorityBranchAr)
   AND ($BlStatusEn IS NULL OR bl_status_en = $BlStatusEn)
+  AND ($BlEstDateFrom IS NULL OR bl_est_date_d >= $BlEstDateFrom::DATE)
+  AND ($BlEstDateTo IS NULL OR bl_est_date_d <= $BlEstDateTo::DATE)
+  AND ($BlExpDateFrom IS NULL OR bl_exp_date_d >= $BlExpDateFrom::DATE)
+  AND ($BlExpDateTo IS NULL OR bl_exp_date_d <= $BlExpDateTo::DATE)
   AND ($BlEstDateDFrom IS NULL OR bl_est_date_d >= $BlEstDateDFrom::DATE)
   AND ($BlEstDateDTo IS NULL OR bl_est_date_d <= $BlEstDateDTo::DATE)
   AND ($BlExpDateDFrom IS NULL OR bl_exp_date_d >= $BlExpDateDFrom::DATE)
