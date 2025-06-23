@@ -9,7 +9,7 @@ SELECT
   ) AS VARCHAR) AS period,
   CASE WHEN strpos($metrics, 'count') > 0 THEN COUNT(*) END AS count,
   CASE WHEN strpos($metrics, 'distinct_count') > 0 THEN COUNT(DISTINCT license_pk) END AS distinct_count
-FROM dim_licenses
+FROM dim_licenses_v1
 WHERE 1=1
   AND ($emirate_name_en IS NULL OR emirate_name_en = $emirate_name_en)
   AND ($emirate_name_en_like IS NULL OR emirate_name_en ILIKE '%' || $emirate_name_en_like || '%')

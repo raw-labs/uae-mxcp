@@ -1,1 +1,1 @@
-SELECT name AS column_name, type FROM pragma_table_info('dim_licenses'); 
+SELECT name AS column_name, type FROM pragma_table_info('dim_licenses_v1'); 

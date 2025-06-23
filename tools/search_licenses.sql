@@ -39,7 +39,7 @@ SELECT
   CAST(bl_exp_date_d AS VARCHAR) AS bl_exp_date_d,
   NULLIF(lat_dd, 'nan') AS lat_dd,
   NULLIF(lon_dd, 'nan') AS lon_dd
-FROM dim_licenses
+FROM dim_licenses_v1
 WHERE 1=1
   AND ($emirate_name_en IS NULL OR emirate_name_en = $emirate_name_en)
   AND ($emirate_name_en_like IS NULL OR emirate_name_en ILIKE '%' || $emirate_name_en_like || '%')
