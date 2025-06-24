@@ -1,68 +1,41 @@
 mxcp: 1.0.0
 tool:
-  name: "categorical_license_values"
-  description: "Get the distinct values for a given categorical field in the licenses dataset."
-  tags: ["categorical", "licenses", "uae", "metadata"]
+  name: categorical_license_values
+  description: Get the distinct values for a given categorical field in the licenses dataset.
+  tags:
+  - categorical
+  - licenses
+  - uae
+  - metadata
   annotations:
-    title: "Categorical License Values"
+    title: Categorical License Values
     readOnlyHint: true
     destructiveHint: false
     idempotentHint: true
     openWorldHint: false
   parameters:
-    - name: "field"
-      type: "string"
-      description: "The categorical field to retrieve distinct values for."
-      default: null
-      examples:
-        - 'license_branch_flag'
-        - 'owner_gender'
-        - 'bl_status_en'
-        - 'bl_status_ar'
-        - 'emirate_name_en'
-        - 'emirate_name_ar'
-        - 'issuance_authority_branch_ar'
-        - 'parent_license_issuance_authority_ar'
-        - 'parent_license_issuance_authority_en'
-        - 'relationship_type_en'
-        - 'relationship_type_ar'
-        - 'bl_type_en'
-        - 'bl_type_ar'
-        - 'bl_legal_type_en'
-        - 'bl_legal_type_ar'
-        - 'owner_nationality_en'
-        - 'owner_nationality_ar'
+  - name: field
+    type: string
+    default: null
+    description: Field exact match
   return:
     type: array
     items:
       type: object
       properties:
-        field: { type: string }
-        value: { type: string }
+        field:
+          type: string
+        value:
+          type: string
   source:
-    file: "categorical_license_values.sql"
+    file: categorical_license_values.sql
   enabled: true
   policies:
     input:
-      - condition: >-
-          user.role == 'guest' && field in [
-            # Personal Information
-            'owner_nationality_en',
-            'owner_nationality_ar',
-            'owner_gender',
-            # Business Information
-            'bl_name_en',
-            'bl_name_ar',
-            'bl_cbls',
-            'business_activity_code',
-            'business_activity_desc_en',
-            'business_activity_desc_ar',
-            # Relationship Information
-            'relationship_type_en',
-            'relationship_type_ar',
-            'parent_licence_license_number',
-            'parent_license_issuance_authority_en',
-            'parent_license_issuance_authority_ar'
-          ]
-        action: deny
-        reason: "Guest users cannot access sensitive field categories" 
+    - condition: "user.role == 'guest' && field in [\n  # Personal Information\n  'owner_nationality_en',\n  'owner_nationality_ar',\n\
+        \  'owner_gender',\n  # Business Information\n  'bl_name_en',\n  'bl_name_ar',\n  'bl_cbls',\n  'business_activity_code',\n\
+        \  'business_activity_desc_en',\n  'business_activity_desc_ar',\n  # Relationship Information\n  'relationship_type_en',\n\
+        \  'relationship_type_ar',\n  'parent_licence_license_number',\n  'parent_license_issuance_authority_en',\n  'parent_license_issuance_authority_ar'\n\
+        ]"
+      action: deny
+      reason: Guest users cannot access sensitive field categories

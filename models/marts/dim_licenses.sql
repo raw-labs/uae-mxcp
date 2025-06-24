@@ -32,9 +32,7 @@ SELECT
     -- corrected field name (bl_num) -> now corrected to include activity to create a unique PK
     md5(
         COALESCE(issuance_authority_en, '') || '|' ||
-        COALESCE(bl, '') || '|' ||
-        COALESCE(business_activity_code, '') || '|' ||
-        COALESCE(business_activity_desc_en, '')
+        COALESCE(bl, '')
     ) AS license_pk,
     s.*,
 

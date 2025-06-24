@@ -1,149 +1,359 @@
 mxcp: 1.0.0
 tool:
-  name: "geo_licenses"
-  description: "Search UAE business licenses by location, with bounding box and deep filtering."
-  tags: ["geo", "licenses", "uae", "deep-filters"]
+  name: geo_licenses
+  description: Search UAE business licenses by location, with bounding box and deep filtering.
+  tags:
+  - geo
+  - licenses
+  - uae
+  - deep-filters
   annotations:
-    title: "Geo Licenses"
+    title: Geo Licenses
     readOnlyHint: true
     destructiveHint: false
     idempotentHint: true
     openWorldHint: false
   parameters:
-    - { name: "bbox", type: "string", description: "Bounding box as 'lon_min,lat_min,lon_max,lat_max'", default: null, examples: ["54.0,24.0,56.0,25.0"] }
-    - name: "emirate_name_en"
-      type: "string"
-      description: "Emirate (EN) exact match"
-      default: null
-      examples:
-        - 'Dubai'
-        - 'Abu Dhabi'
-        - 'Sharjah'
-        - 'Ajman'
-        - 'Ras Al Khaimah'
-        - 'Fujairah'
-        - 'Umm Al Quwain'
-        - 'Umm Al-Quwain'
-    - { name: "emirate_name_en_like", type: "string", description: "Emirate (EN) substring match", default: null }
-    - { name: "emirate_name_ar", type: "string", description: "Emirate (AR) exact match", default: null }
-    - { name: "emirate_name_ar_like", type: "string", description: "Emirate (AR) substring match", default: null }
-    - { name: "issuance_authority_en", type: "string", description: "Issuance authority (EN) exact match", default: null }
-    - { name: "issuance_authority_en_like", type: "string", description: "Issuance authority (EN) substring match", default: null }
-    - { name: "issuance_authority_ar", type: "string", description: "Issuance authority (AR) exact match", default: null }
-    - { name: "issuance_authority_ar_like", type: "string", description: "Issuance authority (AR) substring match", default: null }
-    - { name: "bl", type: "string", description: "License number exact match", default: null }
-    - { name: "bl_like", type: "string", description: "License number substring match", default: null }
-    - { name: "bl_status_en", type: "string", description: "License status (EN)", default: null }
-    - name: "bl_type_en"
-      type: "string"
-      description: "License type (EN)"
-      default: null
-      examples:
-        - 'Agrecultural & Animals'
-        - 'Business Invest License'
-        - 'Commercial'
-        - "E'dmad  (Reliance)"
-        - 'E-Commerce License'
-        - 'Educational License'
-        - 'Event   License'
-        - 'Handicraft'
-        - 'Industrial'
-        - 'International Business Companies'
-        - 'Media License'
-        - 'Preliminary License'
-        - 'Professional'
-        - 'Service'
-        - 'Service License'
-        - 'Standard'
-        - 'Trade'
-        - 'tourism license'
-    - { name: "bl_legal_type_en", type: "string", description: "Legal type (EN)", default: null }
-    - { name: "owner_nationality_en", type: "string", description: "Owner nationality (EN)", default: null }
-    - name: "relationship_type_en"
-      type: "string"
-      description: "Relationship type (EN)"
-      default: null
-      examples:
-          - 'Authorized signatory'
-          - 'Chairman of the Board of Directors'
-          - 'Cheif Executive'
-          - 'Designated Member'
-          - 'Doctor'
-          - 'Founder'
-          - 'Leased-Rented'
-          - 'Owner'
-          - 'Partner'
-          - 'Pharmacist'
-          - 'Representative of the Board'
-          - 'Representative of the Successors '
-          - 'Secretary'
-          - 'Service Agent'
-          - 'Shareholders of the Company'
-          - 'Successors'
-          - 'The Board of Directors, Member and CEO/Executive Director'
-    - { name: "bl_est_date_d_from", type: "string", description: "Establishment date from (YYYY-MM-DD)", default: null }
-    - { name: "bl_est_date_d_to", type: "string", description: "Establishment date to (YYYY-MM-DD)", default: null }
-    - { name: "bl_exp_date_d_from", type: "string", description: "Expiry date from (YYYY-MM-DD)", default: null }
-    - { name: "bl_exp_date_d_to", type: "string", description: "Expiry date to (YYYY-MM-DD)", default: null }
-    - { name: "page_size", type: "integer", description: "Number of records per page", default: 20, minimum: 1, maximum: 1000 }
-    - { name: "page", type: "integer", description: "Page number (1-based)", default: 1, minimum: 1 }
+  - name: bbox
+    type: string
+    default: null
+    description: Bbox exact match
+  - name: bl_cbls_num
+    type: string
+    default: null
+    description: Bl Cbls Num exact match
+  - name: bl_cbls_num_like
+    type: string
+    default: null
+    description: bl_cbls_num substring match
+  - name: bl_est_date_from
+    type: string
+    default: null
+    format: date
+    description: bl_est_date from (YYYY-MM-DD)
+  - name: bl_est_date_to
+    type: string
+    default: null
+    format: date
+    description: bl_est_date to (YYYY-MM-DD)
+  - name: bl_exp_date_from
+    type: string
+    default: null
+    format: date
+    description: bl_exp_date from (YYYY-MM-DD)
+  - name: bl_exp_date_to
+    type: string
+    default: null
+    format: date
+    description: bl_exp_date to (YYYY-MM-DD)
+  - name: bl_full_address
+    type: string
+    default: null
+    description: Bl Full Address exact match
+  - name: bl_full_address_like
+    type: string
+    default: null
+    description: bl_full_address substring match
+  - name: bl_legal_type_ar
+    type: string
+    default: null
+    description: Bl Legal Type Ar exact match
+  - name: bl_legal_type_ar_like
+    type: string
+    default: null
+    description: bl_legal_type_ar substring match
+  - name: bl_legal_type_en
+    type: string
+    default: null
+    description: Bl Legal Type En exact match
+  - name: bl_legal_type_en_like
+    type: string
+    default: null
+    description: bl_legal_type_en substring match
+  - name: bl_name_ar
+    type: string
+    default: null
+    description: Bl Name Ar exact match
+  - name: bl_name_ar_like
+    type: string
+    default: null
+    description: bl_name_ar substring match
+  - name: bl_name_en
+    type: string
+    default: null
+    description: Bl Name En exact match
+  - name: bl_name_en_like
+    type: string
+    default: null
+    description: bl_name_en substring match
+  - name: bl_num
+    type: string
+    default: null
+    description: Bl Num exact match
+  - name: bl_num_like
+    type: string
+    default: null
+    description: bl_num substring match
+  - name: bl_status_ar
+    type: string
+    default: null
+    description: Bl Status Ar exact match
+  - name: bl_status_ar_like
+    type: string
+    default: null
+    description: bl_status_ar substring match
+  - name: bl_status_en
+    type: string
+    default: null
+    description: Bl Status En exact match
+  - name: bl_status_en_like
+    type: string
+    default: null
+    description: bl_status_en substring match
+  - name: bl_type_ar
+    type: string
+    default: null
+    description: Bl Type Ar exact match
+  - name: bl_type_ar_like
+    type: string
+    default: null
+    description: bl_type_ar substring match
+  - name: bl_type_en
+    type: string
+    default: null
+    description: Bl Type En exact match
+  - name: bl_type_en_like
+    type: string
+    default: null
+    description: bl_type_en substring match
+  - name: business_activity_code
+    type: string
+    default: null
+    description: Business Activity Code exact match
+  - name: business_activity_code_like
+    type: string
+    default: null
+    description: business_activity_code substring match
+  - name: business_activity_desc_ar
+    type: string
+    default: null
+    description: Business Activity Desc Ar exact match
+  - name: business_activity_desc_ar_like
+    type: string
+    default: null
+    description: business_activity_desc_ar substring match
+  - name: business_activity_desc_en
+    type: string
+    default: null
+    description: Business Activity Desc En exact match
+  - name: business_activity_desc_en_like
+    type: string
+    default: null
+    description: business_activity_desc_en substring match
+  - name: emirate_name_ar
+    type: string
+    default: null
+    description: Emirate Name Ar exact match
+  - name: emirate_name_ar_like
+    type: string
+    default: null
+    description: emirate_name_ar substring match
+  - name: emirate_name_en
+    type: string
+    default: null
+    description: Emirate Name En exact match
+    examples:
+    - Dubai
+    - Abu Dhabi
+    - Sharjah
+    - Ajman
+    - Ras Al Khaimah
+    - Fujairah
+    - Umm Al Quwain
+  - name: emirate_name_en_like
+    type: string
+    default: null
+    description: emirate_name_en substring match
+  - name: issuance_authority_ar
+    type: string
+    default: null
+    description: Issuance Authority Ar exact match
+  - name: issuance_authority_ar_like
+    type: string
+    default: null
+    description: issuance_authority_ar substring match
+  - name: issuance_authority_branch_ar
+    type: string
+    default: null
+    description: Issuance Authority Branch Ar exact match
+  - name: issuance_authority_branch_ar_like
+    type: string
+    default: null
+    description: issuance_authority_branch_ar substring match
+  - name: issuance_authority_branch_en
+    type: string
+    default: null
+    description: Issuance Authority Branch En exact match
+  - name: issuance_authority_branch_en_like
+    type: string
+    default: null
+    description: issuance_authority_branch_en substring match
+  - name: issuance_authority_en
+    type: string
+    default: null
+    description: Issuance Authority En exact match
+  - name: issuance_authority_en_like
+    type: string
+    default: null
+    description: issuance_authority_en substring match
+  - name: license_branch_flag
+    type: string
+    default: null
+    description: License Branch Flag exact match
+    examples:
+    - Y
+    - N
+  - name: license_latitude_max
+    type: string
+    default: null
+    description: License Latitude Max exact match
+  - name: license_latitude_min
+    type: string
+    default: null
+    description: License Latitude Min exact match
+  - name: license_longitude_max
+    type: string
+    default: null
+    description: License Longitude Max exact match
+  - name: license_longitude_min
+    type: string
+    default: null
+    description: License Longitude Min exact match
+  - name: owner_gender
+    type: string
+    default: null
+    description: Owner Gender exact match
+    examples:
+    - Male
+    - Female
+    - UnKnown
+  - name: owner_nationality_ar
+    type: string
+    default: null
+    description: Owner Nationality Ar exact match
+  - name: owner_nationality_ar_like
+    type: string
+    default: null
+    description: owner_nationality_ar substring match
+  - name: owner_nationality_en
+    type: string
+    default: null
+    description: Owner Nationality En exact match
+  - name: owner_nationality_en_like
+    type: string
+    default: null
+    description: owner_nationality_en substring match
+  - name: page
+    type: integer
+    default: 1
+    description: Page number (1-based)
+    minimum: 1
+  - name: page_size
+    type: integer
+    default: 20
+    description: Number of records per page
+    minimum: 1
+    maximum: 1000
+  - name: parent_licence_license_number
+    type: string
+    default: null
+    description: Parent Licence License Number exact match
+  - name: parent_licence_license_number_like
+    type: string
+    default: null
+    description: parent_licence_license_number substring match
+  - name: parent_license_issuance_authority_ar
+    type: string
+    default: null
+    description: Parent License Issuance Authority Ar exact match
+  - name: parent_license_issuance_authority_ar_like
+    type: string
+    default: null
+    description: parent_license_issuance_authority_ar substring match
+  - name: parent_license_issuance_authority_en
+    type: string
+    default: null
+    description: Parent License Issuance Authority En exact match
+  - name: parent_license_issuance_authority_en_like
+    type: string
+    default: null
+    description: parent_license_issuance_authority_en substring match
+  - name: relationship_type_ar
+    type: string
+    default: null
+    description: Relationship Type Ar exact match
+  - name: relationship_type_ar_like
+    type: string
+    default: null
+    description: relationship_type_ar substring match
+  - name: relationship_type_en
+    type: string
+    default: null
+    description: Relationship Type En exact match
+  - name: relationship_type_en_like
+    type: string
+    default: null
+    description: relationship_type_en substring match
   return:
     type: array
     items:
       type: object
       properties:
-        license_pk: { type: string }
-        bl_name_en: { type: string }
-        lat_dd: { type: number }
-        lon_dd: { type: number }
-        emirate_name_en: { type: string }
-        bl_status_en: { type: string }
-        bl_type_en: { type: string }
+        license_pk:
+          type: string
+        bl_name_en:
+          type: string
+        lat_dd:
+          type: number
+        lon_dd:
+          type: number
+        emirate_name_en:
+          type: string
+        bl_status_en:
+          type: string
+        bl_type_en:
+          type: string
   source:
-    file: "geo_licenses.sql"
+    file: geo_licenses.sql
   enabled: true
   policies:
     output:
-      - condition: "user.role == 'guest'"
-        action: mask_fields
-        fields: [
-          # Personal Information
-          "owner_nationality_en",
-          "owner_nationality_ar",
-          "owner_gender",
-          "bl_full_address",
-          # Business Information
-          "bl_name_en",
-          "bl_name_ar",
-          "bl_cbls",
-          "business_activity_code",
-          "business_activity_desc_en",
-          "business_activity_desc_ar",
-          # Relationship Information
-          "relationship_type_en",
-          "relationship_type_ar",
-          "parent_licence_license_number",
-          "parent_license_issuance_authority_en",
-          "parent_license_issuance_authority_ar",
-          # Location Information
-          "license_latitude",
-          "license_longitude",
-          "license_latitude_1",
-          "license_longitude_1"
-        ]
-        reason: "Guest users cannot view sensitive business, personal, or precise location information"
-      - condition: "user.role == 'guest'"
-        action: filter_fields
-        fields: [
-          "lat_dd",
-          "lon_dd"
-        ]
-        reason: "Guest users cannot view precise coordinates"
-  # tests:
-  #   - name: "bbox"
-  #     arguments:
-  #       - { key: "bbox", value: "54.0,24.0,56.0,25.0" }
-  #       - { key: "emirate_name_en", value: "Dubai" }
-  #       - { key: "page_size", value: 1 }
-  #     result: ">= 1 row"
- 
+    - condition: user.role == 'guest'
+      action: mask_fields
+      fields:
+      - owner_nationality_en
+      - owner_nationality_ar
+      - owner_gender
+      - bl_full_address
+      - bl_name_en
+      - bl_name_ar
+      - bl_cbls
+      - business_activity_code
+      - business_activity_desc_en
+      - business_activity_desc_ar
+      - relationship_type_en
+      - relationship_type_ar
+      - parent_licence_license_number
+      - parent_license_issuance_authority_en
+      - parent_license_issuance_authority_ar
+      - license_latitude
+      - license_longitude
+      - license_latitude_1
+      - license_longitude_1
+      reason: Guest users cannot view sensitive business, personal, or precise location information
+    - condition: user.role == 'guest'
+      action: filter_fields
+      fields:
+      - lat_dd
+      - lon_dd
+      reason: Guest users cannot view precise coordinates
